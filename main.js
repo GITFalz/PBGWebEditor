@@ -9,15 +9,29 @@ let keys = [];
 let isDragging = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
-let angleX = 0;
-let angleY = 0;
+let rotationSpeed = 1;
 let lastFrameTime = performance.now();
 let deltaTime = 0;
+let size = 1;
+
+let modelMatrix = new Float32Array(16);
+let scalingMatrix = new Float32Array(16);
+
+function isTypingInInput() {
+  const active = document.activeElement;
+  return active && (
+    active.tagName === 'INPUT' ||
+    active.tagName === 'TEXTAREA' ||
+    active.isContentEditable
+  );
+}
 
 document.addEventListener("keydown", (e) => {
+  if (isTypingInInput()) return; // Ignore key events if typing in an input field
   keys[e.key.toLowerCase()] = true;
 });
 document.addEventListener("keyup", (e) => {
+  if (isTypingInInput()) return; // Ignore key events if typing in an input field
   keys[e.key.toLowerCase()] = false;
 });
 
@@ -35,12 +49,11 @@ canvas.addEventListener("mousemove", (e) => {
 
   const rotationSpeed = 0.1 * deltaTime;
 
-  // Update rotation angles based on mouse movement
-  angleY += deltaX * rotationSpeed;
-  angleX += deltaY * rotationSpeed;
-
   lastMouseX = e.clientX;
   lastMouseY = e.clientY;
+
+  globalXRotation(deltaY * rotationSpeed);
+  globalYRotation(deltaX * rotationSpeed);
 });
 
 canvas.addEventListener("mouseup", () => {
@@ -49,6 +62,14 @@ canvas.addEventListener("mouseup", () => {
 
 canvas.addEventListener("mouseleave", () => {
   isDragging = false;
+});
+
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const zoomSpeed = 0.01 * size * deltaTime;
+  size -= e.deltaY * zoomSpeed;
+  size = Math.max(0.1, Math.min(size, 10)); // Clamp size between 0.1 and 10
+  globalScale(size);
 });
 
 
@@ -74,10 +95,11 @@ const vsSource = `
   attribute vec3 aPosition;
   attribute vec3 aColor;
   uniform mat4 uModelViewMatrix;
+  uniform mat4 uScaleMatrix;
   uniform mat4 uProjectionMatrix;
   varying vec3 vColor;
   void main() {
-    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+    gl_Position = uProjectionMatrix * uModelViewMatrix * uScaleMatrix * vec4(aPosition, 1.0);
     vColor = aColor;
   }
 `;
@@ -119,18 +141,32 @@ function createProgram(gl, vsSource, fsSource) {
 const program = createProgram(gl, vsSource, fsSource);
 gl.useProgram(program);
 
-// Cube vertex positions and colors
+const positionsCorner = new Float32Array([
+  // Front face (Z = 1)
+  0, 0, 1,   1, 0, 0,
+  1, 0, 1,   0, 1, 0,
+  1, 1, 1,   0, 0, 1,
+  0, 1, 1,   1, 1, 0,
+
+  // Back face (Z = 0)
+  0, 0, 0,   1, 0, 1,
+  0, 1, 0,   0, 1, 1,
+  1, 1, 0,   1, 1, 1,
+  1, 0, 0,   0.5, 0.5, 0.5,
+]);
+
 const positions = new Float32Array([
-  // Front
-  -1, -1,  1,  1, 0, 0,
-   1, -1,  1,  0, 1, 0,
-   1,  1,  1,  0, 0, 1,
-  -1,  1,  1,  1, 1, 0,
-  // Back
-  -1, -1, -1,  1, 0, 1,
-  -1,  1, -1,  0, 1, 1,
-   1,  1, -1,  1, 1, 1,
-   1, -1, -1,  0.5, 0.5, 0.5,
+  // Front face (Z = +0.5)
+  -0.5, -0.5,  0.5,   1, 0, 0,
+   0.5, -0.5,  0.5,   0, 1, 0,
+   0.5,  0.5,  0.5,   0, 0, 1,
+  -0.5,  0.5,  0.5,   1, 1, 0,
+
+  // Back face (Z = -0.5)
+  -0.5, -0.5, -0.5,   1, 0, 1,
+  -0.5,  0.5, -0.5,   0, 1, 1,
+   0.5,  0.5, -0.5,   1, 1, 1,
+   0.5, -0.5, -0.5,   0.5, 0.5, 0.5,
 ]);
 
 const indices = new Uint16Array([
@@ -164,6 +200,7 @@ gl.enableVertexAttribArray(aColor);
 
 // Uniform locations
 const uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
+const uScaleMatrix = gl.getUniformLocation(program, "uScaleMatrix");
 const uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
 
 // Matrices
@@ -186,22 +223,31 @@ function identity() {
   ]);
 }
 
-function rotateY(m, angle) {
-  const c = Math.cos(angle), s = Math.sin(angle);
-  return new Float32Array([
-    c, 0, -s, 0,
-    0, 1,  0, 0,
-    s, 0,  c, 0,
-    0, 0,  0, 1
-  ]);
-}
-
-function rotateX(m, angle) {
+function rotateX(angle) {
   const c = Math.cos(angle), s = Math.sin(angle);
   return new Float32Array([
     1, 0, 0, 0,
     0, c, s, 0,
     0, -s, c, 0,
+    0, 0, 0, 1
+  ]);
+}
+
+function rotateY(angle) {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return new Float32Array([
+    c, 0, -s, 0,
+    0, 1, 0, 0,
+    s, 0, c, 0,
+    0, 0, 0, 1
+  ]);
+}
+
+function scale(m, s) {
+  return new Float32Array([
+    s, 0, 0, 0,
+    0, s, 0, 0,
+    0, 0, s, 0,
     0, 0, 0, 1
   ]);
 }
@@ -219,7 +265,44 @@ function update() {
   deltaTime = (now - lastFrameTime) / 1000; // in seconds
   lastFrameTime = now;
 
+
+  const rotationAmount = rotationSpeed * deltaTime;
+
+  if (keys['z']) {
+    globalXRotation(-rotationAmount);
+  }
+
+  if (keys['s']) {
+    globalXRotation(rotationAmount);
+  }
+
+  if (keys['q']) {
+    globalYRotation(-rotationAmount);
+  }
+
+  if (keys['d']) {
+    globalYRotation(rotationAmount);
+  }
+
   requestAnimationFrame(update);
+}
+
+function globalXRotation(angle) {
+  let temp = translate(identity(), 0, 0, 20);
+  temp = multiply(rotateX(angle), temp);
+  temp = multiply(translate(identity(), 0, 0, -20), temp);
+  modelMatrix = multiply(temp, modelMatrix);
+}
+
+function globalYRotation(angle) {
+  let temp = translate(identity(), 0, 0, 20);
+  temp = multiply(rotateY(angle), temp);
+  temp = multiply(translate(identity(), 0, 0, -20), temp);
+  modelMatrix = multiply(temp, modelMatrix);
+}
+
+function globalScale(size) {
+  scalingMatrix = scale(identity(), size);
 }
 
 // Animation loop
@@ -230,24 +313,12 @@ function render() {
 
   const aspect = canvas.width / canvas.height;
   const projection = perspective(Math.PI / 4, aspect, 0.1, 100);
-  let modelView = identity();
-  modelView = translate(modelView, 0, 0, -6);
 
-  let rotationY = rotateY(identity(), angleY);
-  let rotationX = rotateX(identity(), angleX);
-
-  modelView = multiply(modelView, rotationY);
-  modelView = multiply(modelView, rotationX);
-
-  gl.uniformMatrix4fv(uModelViewMatrix, false, modelView);
+  gl.uniformMatrix4fv(uModelViewMatrix, false, modelMatrix);
+  gl.uniformMatrix4fv(uScaleMatrix, false, scalingMatrix);
   gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
 
   gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-
-  if (keys['q']) angleY -= 0.01;
-  if (keys['d']) angleY += 0.01;
-  if (keys['z']) angleX -= 0.01;
-  if (keys['s']) angleX += 0.01;
 
   requestAnimationFrame(render);
 }
@@ -259,6 +330,10 @@ function multiply(a, b) {
       out[j*4+i] = a[i]*b[j*4] + a[i+4]*b[j*4+1] + a[i+8]*b[j*4+2] + a[i+12]*b[j*4+3];
   return out;
 }
+
+modelMatrix = identity();
+scalingMatrix = identity();
+modelMatrix = translate(modelMatrix, 0, 0, -20);
 
 update();
 render();
