@@ -1,9 +1,7 @@
-const canvas = document.getElementById("glcanvas");
-const gl = canvas.getContext("webgl");
-
-if (!gl) {
-  alert("WebGL not supported");
-}
+import { 
+  show_graphNodeShapeProperties,
+  set_currentGraphNodeType
+ } from './editor/editor.js';
 
 let keys = [];
 let isDragging = false;
@@ -13,6 +11,7 @@ let rotationSpeed = 1;
 let lastFrameTime = performance.now();
 let deltaTime = 0;
 let size = 1;
+
 
 let modelMatrix = new Float32Array(16);
 let scalingMatrix = new Float32Array(16);
@@ -72,19 +71,32 @@ canvas.addEventListener("wheel", (e) => {
   globalScale(size);
 });
 
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'shape-type-select') {
+    window.sharedMesh.setShapeGetter(e.target.value);
+    set_currentGraphNodeType(e.target.value);
+    show_graphNodeShapeProperties();
+    window.sharedMesh.reload();
+  }
+});
 
 // Resize canvas
 function resizeCanvasToDisplaySize(canvas) {
-  const dpr = window.devicePixelRatio || 1;
-  const width = Math.floor(canvas.clientWidth * dpr);
-  const height = Math.floor(canvas.clientHeight * dpr);
+  const width  = canvas.clientWidth;
+  const height = canvas.clientHeight;
+
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
-    gl.viewport(0, 0, width, height);
   }
 }
 resizeCanvasToDisplaySize(canvas);
+gl.viewport(0, 0, canvas.width, canvas.height);
+
+window.addEventListener('resize', () => {
+  resizeCanvasToDisplaySize(canvas);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+});
 
 // Enable depth
 gl.enable(gl.DEPTH_TEST);
@@ -94,10 +106,13 @@ gl.depthFunc(gl.LEQUAL);
 const vsSource = `
   attribute vec3 aPosition;
   attribute vec3 aColor;
+
   uniform mat4 uModelViewMatrix;
   uniform mat4 uScaleMatrix;
   uniform mat4 uProjectionMatrix;
+
   varying vec3 vColor;
+
   void main() {
     gl_Position = uProjectionMatrix * uModelViewMatrix * uScaleMatrix * vec4(aPosition, 1.0);
     vColor = aColor;
@@ -106,7 +121,9 @@ const vsSource = `
 
 const fsSource = `
   precision mediump float;
+
   varying vec3 vColor;
+
   void main() {
     gl_FragColor = vec4(vColor, 1.0);
   }
@@ -141,6 +158,9 @@ function createProgram(gl, vsSource, fsSource) {
 const program = createProgram(gl, vsSource, fsSource);
 gl.useProgram(program);
 
+
+
+
 const positionsCorner = new Float32Array([
   // Front face (Z = 1)
   0, 0, 1,   1, 0, 0,
@@ -155,48 +175,8 @@ const positionsCorner = new Float32Array([
   1, 0, 0,   0.5, 0.5, 0.5,
 ]);
 
-const positions = new Float32Array([
-  // Front face (Z = +0.5)
-  -0.5, -0.5,  0.5,   1, 0, 0,
-   0.5, -0.5,  0.5,   0, 1, 0,
-   0.5,  0.5,  0.5,   0, 0, 1,
-  -0.5,  0.5,  0.5,   1, 1, 0,
+window.sharedMesh.reload();
 
-  // Back face (Z = -0.5)
-  -0.5, -0.5, -0.5,   1, 0, 1,
-  -0.5,  0.5, -0.5,   0, 1, 1,
-   0.5,  0.5, -0.5,   1, 1, 1,
-   0.5, -0.5, -0.5,   0.5, 0.5, 0.5,
-]);
-
-const indices = new Uint16Array([
-  0, 1, 2, 0, 2, 3, // Front
-  4, 5, 6, 4, 6, 7, // Back
-  4, 5, 3, 4, 3, 0, // Left
-  1, 2, 6, 1, 6, 7, // Right
-  5, 6, 2, 5, 2, 3, // Top
-  4, 7, 1, 4, 1, 0  // Bottom
-]);
-
-// Create buffers
-const positionBuffer = gl.createBuffer();
-const indexBuffer = gl.createBuffer();
-
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-
-// Setup attributes
-const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
-const aPosition = gl.getAttribLocation(program, "aPosition");
-gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, stride, 0);
-gl.enableVertexAttribArray(aPosition);
-
-const aColor = gl.getAttribLocation(program, "aColor");
-gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, stride, 3 * Float32Array.BYTES_PER_ELEMENT);
-gl.enableVertexAttribArray(aColor);
 
 // Uniform locations
 const uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
@@ -307,7 +287,6 @@ function globalScale(size) {
 
 // Animation loop
 function render() {
-  resizeCanvasToDisplaySize(canvas);
   gl.clearColor(0.1, 0.1, 0.1, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -318,7 +297,11 @@ function render() {
   gl.uniformMatrix4fv(uScaleMatrix, false, scalingMatrix);
   gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
 
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+  gl.drawElements(gl.TRIANGLES, window.sharedMesh.indexCount, gl.UNSIGNED_SHORT, 0);
+  const error = gl.getError();
+if (error !== gl.NO_ERROR) {
+    console.error('WebGL error:', error);
+}
 
   requestAnimationFrame(render);
 }
