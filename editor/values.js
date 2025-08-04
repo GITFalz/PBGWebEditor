@@ -42,12 +42,44 @@ function getConeValues() {
     };
 }
 
+function getTrianglePrismValues() {
+    return {
+        width: parseFloat(document.getElementById('trianglePrism-width').value),
+        height: parseFloat(document.getElementById('trianglePrism-height').value),
+        depth: parseFloat(document.getElementById('trianglePrism-depth').value)
+    };
+}
+
 function getOriginValues() {
     return {
         centerX: parseFloat(document.getElementById('center-x').value),
         centerY: parseFloat(document.getElementById('center-y').value),
         centerZ: parseFloat(document.getElementById('center-z').value)
     };
+}
+
+// === Setters ===
+function setOriginValues(centerX, centerY, centerZ) {
+    document.getElementById('center-x').value = centerX;
+    document.getElementById('center-y').value = centerY;
+    document.getElementById('center-z').value = centerZ;
+}
+
+function setRotationValues(rotationX, rotationY, rotationZ) {
+    document.getElementById('rotation-x').value = rotationX;
+    document.getElementById('rotation-y').value = rotationY;
+    document.getElementById('rotation-z').value = rotationZ;
+}
+
+
+function setGraphCount(count) {
+    document.getElementById('graph-count').value = count;
+}
+
+function setGraphDistance(x, y, z) {
+    document.getElementById('graph-distance-x').value = x;
+    document.getElementById('graph-distance-y').value = y;
+    document.getElementById('graph-distance-z').value = z;
 }
 
 
@@ -59,5 +91,10 @@ window.values = {
     taperedCylinderValues: getTaperedCylinderValues,
     pyramidValues: getPyramidValues,
     coneValues: getConeValues,
-    originValues: getOriginValues
+    originValues: getOriginValues,
+
+    setOriginValues: setOriginValues,
+    setRotationValues: setRotationValues,
+    setGraphCount: setGraphCount,
+    setGraphDistance: setGraphDistance,
 };

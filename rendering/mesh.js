@@ -1,6 +1,5 @@
 const values = window.values;
 const shapes = window.shapes;
-const program = window.program;
 
 class Mesh {
     constructor(name) {
@@ -135,7 +134,7 @@ class Mesh {
     }
 
     reload() {
-        const blocks = this.getShapeBlocks();
+        const blocks = window.generate_graphNodeBlocks();
         let faceCount = this.occlusionCheck(blocks);
         this.generateMesh(blocks, faceCount);
     }
@@ -194,10 +193,10 @@ class Mesh {
             else if (i === 5) brightness = 0.4; // Bottom face
 
             colors.set([
-                brightness, brightness, brightness, // RGB
-                brightness, brightness, brightness,
-                brightness, brightness, brightness,
-                brightness, brightness, brightness
+                brightness, 1, brightness, // RGB
+                brightness, brightness, 1,
+                1, 1, brightness,
+                brightness, brightness, 1
             ], baseIndex * 3);
 
             // Define indices for the block face
@@ -210,13 +209,13 @@ class Mesh {
             }
         });
 
-        let vertexBuffer = new VertexBuffer(gl, positions, Float32Array, 3);
-        let colorBuffer = new VertexBuffer(gl, colors, Float32Array, 3);
-        let indexBuffer = new IndexBuffer(gl, indices);
+        let vertexBuffer = new VertexBuffer(window.gl, positions, Float32Array, 3);
+        let colorBuffer = new VertexBuffer(window.gl, colors, Float32Array, 3);
+        let indexBuffer = new IndexBuffer(window.gl, indices);
 
-        vertexBuffer.getLocation(program, "aPosition");
-        colorBuffer.getLocation(program, "aColor");
-        indexBuffer.bind();  
+        vertexBuffer.getLocation(window.program, "aPosition");
+        colorBuffer.getLocation(window.program, "aColor");
+        indexBuffer.bind();
 
         this.setPositionBuffer(vertexBuffer);
         this.setColorBuffer(colorBuffer);

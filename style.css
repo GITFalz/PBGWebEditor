@@ -79,6 +79,40 @@ body {
   padding-bottom: 10px;
 }
 
+.default-selected {
+  background-color: #2a2a2a; /* Darker background for selected items */
+  border-left: 4px solid #007bff; /* Highlight with a blue left border */
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.toggle-container label {
+  margin-right: 10px;
+  color: #f0f0f0; /* Lighter color for better contrast */
+}
+
+.toggle-container input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #007bff; /* Custom color for checkbox */
+  /* For browsers that support the accent-color property */
+  -webkit-appearance: none; /* Remove default styling */
+  background-color: #2a2a2a; /* Dark background for checkbox */
+  border: 1px solid #444; /* Border for checkbox */
+  border-radius: 4px; /* Rounded corners */
+  position: relative;
+}
+
+.toggle-container input[type="checkbox"]:checked {
+  background-color: #007bff;
+  border-color: #0056b3;
+}
+
 /* Main layout container */
 #editor-panel {
   display: flex;
@@ -272,9 +306,9 @@ ul {
   font-size: 14px;
 }
 
-/* Nested point node list within graph nodes */
+/* Nested polet node list within graph nodes */
 .graph-node-item .point-node-list {
-  flex-basis: 100%; /* Force the point node list to take full width and wrap below */
+  flex-basis: 100%; /* Force the polet node list to take full width and wrap below */
   margin-top: 5px;
   margin-left: 15px; /* Indent nested list */
   border-left: 2px solid #444; /* Visual indicator for nesting */
@@ -282,7 +316,7 @@ ul {
 }
 
 .point-node-item {
-  display: flex; /* Keep point node items as flex to align name and delete button */
+  display: flex; /* Keep polet node items as flex to align name and delete button */
   justify-content: space-between;
   align-items: center;
   background-color: #333; /* Slightly different background for nested items */
@@ -404,6 +438,17 @@ select.input-field:focus {
 .button-full-width {
   width: 100%; /* Make it full width */
   margin-top: 15px;
+}
+
+.button-square {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px; /* Slightly rounded corners */
 }
 
 .top-seperator {

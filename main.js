@@ -10,11 +10,69 @@ let lastMouseY = 0;
 let rotationSpeed = 1;
 let lastFrameTime = performance.now();
 let deltaTime = 0;
-let size = 1;
+window.size = 1;
+
+
+let camera = {
+  eye: [0, 0, 0],
+  center: [0, 0, 0],
+  up: [0, 1, 0],
+  yaw: 0,
+  pitch: 0,
+  distance: canvas.width * 0.2
+};
+
+
+
+const playerPos = [0, 0, 0];
+
+function updateCameraAnchor() {
+  const x = camera.distance * Math.cos(camera.pitch) * Math.sin(camera.yaw);
+  const y = camera.distance * Math.sin(camera.pitch);
+  const z = camera.distance * Math.cos(camera.pitch) * Math.cos(camera.yaw);
+
+  camera.eye = [x, y, z];
+  camera.center = [0, 0, 0];
+  camera.up = [0, 1, 0];
+}
+
+function updateCameraPlayer() {
+  const cosPitch = Math.cos(camera.pitch);
+  const sinPitch = Math.sin(camera.pitch);
+  const cosYaw = Math.cos(camera.yaw);
+  const sinYaw = Math.sin(camera.yaw);
+
+  const forward = [
+    sinYaw * cosPitch,
+    sinPitch,
+    cosYaw * cosPitch
+  ];
+
+  const camOffset = [
+    -forward[0] * camera.distance,
+    -forward[1] * camera.distance + 2.0, // Raise a bit
+    -forward[2] * camera.distance
+  ];
+
+  camera.eye = [
+    playerPos[0] + camOffset[0],
+    playerPos[1] + camOffset[1],
+    playerPos[2] + camOffset[2]
+  ];
+
+  camera.center = [
+    playerPos[0] + forward[0],
+    playerPos[1] + forward[1],
+    playerPos[2] + forward[2]
+  ];
+
+  camera.up = [0, 1, 0];
+}
 
 
 let modelMatrix = new Float32Array(16);
-let scalingMatrix = new Float32Array(16);
+window.scalingMatrix = new Float32Array(16);
+window.rotationMatrix = new Float32Array(16);
 
 function isTypingInInput() {
   const active = document.activeElement;
@@ -51,41 +109,57 @@ canvas.addEventListener("touchstart", (e) => {
 canvas.addEventListener("mousemove", (e) => {
   if (!isDragging) return;
 
-  const deltaX = e.clientX - lastMouseX;
-  const deltaY = e.clientY - lastMouseY;
-
-  const rotationSpeed = 0.1 * deltaTime;
-
+  const dx = e.clientX - lastMouseX;
+  const dy = e.clientY - lastMouseY;
   lastMouseX = e.clientX;
   lastMouseY = e.clientY;
 
-  globalXRotation(deltaY * rotationSpeed);
-  globalYRotation(deltaX * rotationSpeed);
+  camera.yaw += dx * deltaTime * 0.1; // Adjust sensitivity
+  camera.pitch -= dy * deltaTime * 0.1; // Adjust sensitivity
+  camera.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, camera.pitch)); // clamp
+
+  updateCameraAnchor();
 });
+
+canvas.addEventListener("touchmove", (e) => {
+  if (!isDragging || e.touches.length === 0) return;
+
+  const deltaX = e.touches[0].clientX - lastMouseX;
+  const deltaY = e.touches[0].clientY - lastMouseY;
+
+  const rotationSpeed = 0.1 * deltaTime;
+
+  lastMouseX = e.touches[0].clientX;
+  lastMouseY = e.touches[0].clientY;
+
+  globalXRotation(deltaY * rotationSpeed);
+  globalYRotation(deltaY * rotationSpeed);
+})
 
 canvas.addEventListener("mouseup", () => {
   isDragging = false;
 });
 
+canvas.addEventListener("touchend", () => {
+  isDragging = false;
+})
+
 canvas.addEventListener("mouseleave", () => {
   isDragging = false;
 });
 
+canvas.addEventListener("touchcancel", () => {
+  isDragging = false;
+})
+
 canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
   const zoomSpeed = 0.01 * size * deltaTime;
-  size -= e.deltaY * zoomSpeed;
-  size = Math.max(0.1, Math.min(size, 10)); // Clamp size between 0.1 and 10
-  globalScale(size);
-});
+  window.size += e.deltaY * zoomSpeed;
+  window.size = Math.max(0.1, Math.min(size, 10)); // Clamp size between 0.1 and 10
+  camera.distance = -20 * window.size; // Adjust camera distance based on size
 
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'shape-type-select') {
-    window.sharedMesh.setShapeGetter(e.target.value);
-    set_currentGraphNodeType(e.target.value);
-    show_graphNodeShapeProperties();
-    window.sharedMesh.reload();
-  }
+  updateCameraAnchor();
 });
 
 // Resize canvas
@@ -108,65 +182,9 @@ window.addEventListener('resize', () => {
 
 // Enable depth
 gl.enable(gl.DEPTH_TEST);
+
+
 gl.depthFunc(gl.LEQUAL);
-
-// Shaders
-const vsSource = `
-  attribute vec3 aPosition;
-  attribute vec3 aColor;
-
-  uniform mat4 uModelViewMatrix;
-  uniform mat4 uScaleMatrix;
-  uniform mat4 uProjectionMatrix;
-
-  varying vec3 vColor;
-
-  void main() {
-    gl_Position = uProjectionMatrix * uModelViewMatrix * uScaleMatrix * vec4(aPosition, 1.0);
-    vColor = aColor;
-  }
-`;
-
-const fsSource = `
-  precision mediump float;
-
-  varying vec3 vColor;
-
-  void main() {
-    gl_FragColor = vec4(vColor, 1.0);
-  }
-`;
-
-function createShader(gl, type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error("Shader error:", gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-}
-
-function createProgram(gl, vsSource, fsSource) {
-  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error("Program error:", gl.getProgramInfoLog(program));
-    return null;
-  }
-  return program;
-}
-
-const program = createProgram(gl, vsSource, fsSource);
-gl.useProgram(program);
-
-
 
 
 const positionsCorner = new Float32Array([
@@ -182,14 +200,6 @@ const positionsCorner = new Float32Array([
   1, 1, 0,   1, 1, 1,
   1, 0, 0,   0.5, 0.5, 0.5,
 ]);
-
-window.sharedMesh.reload();
-
-
-// Uniform locations
-const uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
-const uScaleMatrix = gl.getUniformLocation(program, "uScaleMatrix");
-const uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
 
 // Matrices
 function perspective(fov, aspect, near, far) {
@@ -248,6 +258,62 @@ function translate(m, x, y, z) {
   return result;
 }
 
+
+function multiply(a, b) {
+  const out = new Float32Array(16);
+  for (let i = 0; i < 4; ++i)
+    for (let j = 0; j < 4; ++j)
+      out[j*4+i] = a[i]*b[j*4] + a[i+4]*b[j*4+1] + a[i+8]*b[j*4+2] + a[i+12]*b[j*4+3];
+  return out;
+}
+
+function lookAt(eye, center, up) {
+    const zAxis = normalize(subtract(eye, center));   // Forward
+    const xAxis = normalize(cross(up, zAxis));        // Right
+    const yAxis = cross(zAxis, xAxis);                // Up (orthogonal)
+
+    return [
+        xAxis[0], yAxis[0], zAxis[0], 0,
+        xAxis[1], yAxis[1], zAxis[1], 0,
+        xAxis[2], yAxis[2], zAxis[2], 0,
+        -dot(xAxis, eye), -dot(yAxis, eye), -dot(zAxis, eye), 1
+    ];
+}
+
+function subtract(a, b) {
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
+function cross(a, b) {
+    return [
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0]
+    ];
+}
+
+function dot(a, b) {
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+function length(v) {
+    return Math.sqrt(dot(v, v));
+}
+
+function normalize(v) {
+    const len = length(v);
+    return len > 0 ? [v[0]/len, v[1]/len, v[2]/len] : [0, 0, 0];
+}
+
+window.identity = identity;
+window.rotateX = rotateX;
+window.rotateY = rotateY;
+window.scale = scale;
+window.perspective = perspective;
+window.translate = translate;
+window.multiply = multiply;
+
+
 function update() {
   const now = performance.now();
   deltaTime = (now - lastFrameTime) / 1000; // in seconds
@@ -277,35 +343,35 @@ function update() {
 
 function globalXRotation(angle) {
   let temp = translate(identity(), 0, 0, 20);
-  temp = multiply(rotateX(angle), temp);
-  temp = multiply(translate(identity(), 0, 0, -20), temp);
-  modelMatrix = multiply(temp, modelMatrix);
+  temp = window.multiply(rotateX(angle), temp);
+  temp = window.multiply(translate(identity(), 0, 0, -20), temp);
+  window.rotationMatrix = window.multiply(temp,  window.rotationMatrix);
 }
 
 function globalYRotation(angle) {
   let temp = translate(identity(), 0, 0, 20);
-  temp = multiply(rotateY(angle), temp);
-  temp = multiply(translate(identity(), 0, 0, -20), temp);
-  modelMatrix = multiply(temp, modelMatrix);
+  temp = window.multiply(rotateY(angle), temp);
+  temp = window.multiply(translate(identity(), 0, 0, -20), temp);
+  window.rotationMatrix = window.multiply(temp,  window.rotationMatrix);
 }
 
 function globalScale(size) {
-  scalingMatrix = scale(identity(), size);
+  window.scalingMatrix = scale(identity(), size);
 }
 
 // Animation loop
 function render() {
   gl.clearColor(0.1, 0.1, 0.1, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+  
   const aspect = canvas.width / canvas.height;
-  const projection = perspective(Math.PI / 4, aspect, 0.1, 100);
+  const projection = perspective(Math.PI / 4, aspect, 0.1, 1000);
+  const viewMatrix = lookAt(camera.eye, camera.center, camera.up);
 
-  gl.uniformMatrix4fv(uModelViewMatrix, false, modelMatrix);
-  gl.uniformMatrix4fv(uScaleMatrix, false, scalingMatrix);
-  gl.uniformMatrix4fv(uProjectionMatrix, false, projection);
+  gl.uniformMatrix4fv(window.uProjectionMatrix, false, projection);
+  gl.uniformMatrix4fv(window.uViewMatrix, false, viewMatrix);
 
-  gl.drawElements(gl.TRIANGLES, window.sharedMesh.indexCount, gl.UNSIGNED_SHORT, 0);
+  renderChunks();
   const error = gl.getError();
 if (error !== gl.NO_ERROR) {
     console.error('WebGL error:', error);
@@ -314,17 +380,12 @@ if (error !== gl.NO_ERROR) {
   requestAnimationFrame(render);
 }
 
-function multiply(a, b) {
-  const out = new Float32Array(16);
-  for (let i = 0; i < 4; ++i)
-    for (let j = 0; j < 4; ++j)
-      out[j*4+i] = a[i]*b[j*4] + a[i+4]*b[j*4+1] + a[i+8]*b[j*4+2] + a[i+12]*b[j*4+3];
-  return out;
-}
-
 modelMatrix = identity();
-scalingMatrix = identity();
+window.scalingMatrix = identity();
 modelMatrix = translate(modelMatrix, 0, 0, -20);
 
 update();
 render();
+
+generateChunks();
+reloadChunks();
