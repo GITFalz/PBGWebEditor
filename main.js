@@ -40,6 +40,14 @@ canvas.addEventListener("mousedown", (e) => {
   lastMouseY = e.clientY;
 });
 
+canvas.addEventListener("touchstart", (e) => {
+  isDragging = true;
+  if (e.touches.length > 0) {
+    lastMouseX = e.touches[0].clientX;
+    lastMouseY = e.touches[0].clientY;
+  }
+})
+
 canvas.addEventListener("mousemove", (e) => {
   if (!isDragging) return;
 
