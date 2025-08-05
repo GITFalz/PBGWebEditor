@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>PBG Editor</title>
         <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     </head>
     <body>
         <div id="editor-panel">
@@ -11,473 +12,572 @@
                 <div id="logo">
                     <p>PBG Web Editor</p>
                 </div>
+                <div id="nav-buttons" class="flex-row justify-between items-center">
+                    <button id="structure-button" class="nav-button selected">
+                        Structure
+                    </button>
+                    <button id="texture-button" class="nav-button">
+                        Texture
+                    </button>
+                    <button id="block-button" class="nav-button">
+                        Block
+                    </button>
+                </div>
             </div>
             <div id="editor-content">
                 <div id="left-panel" class="flex-col-gap">
-                    <div id="structure-node-hierarchy" class="panel-section">
-                        <div id="structure-node-hierarchy-header" class="flex-row justify-between items-center">
-                            <h2>Structures</h2>
-                            <button id="add-node-button">+</button>
+                    <div id="structure-left-panel">
+                        <div id="structure-node-hierarchy" class="panel-section">
+                            <div id="structure-node-hierarchy-header" class="flex-row justify-between items-center">
+                                <h2>Structures</h2>
+                                <button id="add-node-button">+</button>
+                            </div>
+                            <div id="structure-node-hierarchy-content">
+                                <ul id="structure-node-list">
+                                    
+                                </ul>
+                            </div>
                         </div>
-                        <div id="structure-node-hierarchy-content">
-                            <ul id="structure-node-list">
-                                
-                            </ul>
+                        <div id="graph-node-hierarchy" class="panel-section">
+                            <div id="graph-node-hierarchy-header" class="flex-row justify-between items-center">
+                                <h2>Graph Nodes</h2>
+                                <button id="add-graph-node-button" onclick="addGraphNode()">+</button>
+                            </div>
+                            <div id="graph-node-hierarchy-content">
+                                <ul id="graph-node-list">
+                                    
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                    <div id="graph-node-hierarchy" class="panel-section">
-                        <div id="graph-node-hierarchy-header" class="flex-row justify-between items-center">
-                            <h2>Graph Nodes</h2>
-                            <button id="add-graph-node-button" onclick="addGraphNode()">+</button>
-                        </div>
-                        <div id="graph-node-hierarchy-content">
-                            <ul id="graph-node-list">
-                                
-                            </ul>
-                        </div>
+                    <div id="texture-left-panel" class="hidden">
+                        
                     </div>
                 </div>
                 <div id="center-panel">
+                    <!-- WebGL structure canvas -->
                     <div id="canvas-container">
                         <canvas id="glcanvas"></canvas>
                     </div>
                 </div>
                 <div id="right-panel" class="flex-col-gap">
-                    <div id="structure-node-properties" class="panel-section">
-                        <h2>Node Properties</h2>
-                        <div id="node-properties-content">
-                            <button id="add-node-property-button" class="button-full-width">Add Node</button>
-                        </div>
-                    </div>
-                    <div id="shape-properties" class="graph-node-properties top-seperator panel-section">
-                        <h2>Shape Properties</h2>
-                        <div id="shape-properties-content">
-							<p class="mb-md">Select a node type</p>
-                            <select id="node-type-select" class="input-field">
-                                <option value="shape">Shape</option>
-                                <option value="light">Light</option>
-                                <option value="foliage">Foliage</option>
-                            </select>
-                            <button id="add-point-node-button" class="button-full-width" onclick="addPointNode()">Add Point</button>
-                        </div>
-                    </div>
-                    <div id="light-properties" class="graph-node-properties top-seperator panel-section hidden">
-                        <h2>Light Properties</h2>
-                        <div id="light-properties-content">
-                            <p class="mb-md">Select a light type</p>
-                            <select id="light-type-select" class="input-field">
-                                <option value="point">Polet Light</option>
-                                <option value="directional">Directional Light</option>
-                                <option value="spot">Spot Light</option>
-                            </select>
-                            <!-- Common light properties -->
-                            <label for="light-intensity">Intensity:</label>
-                            <div class="input-group">
-                                <input type="number" id="light-intensity" value="1" min="0" step="0.1">
-                                <button class="value-add" data-input="light-intensity" id="light-intensity-add">+</button>
-                                <button class="value-subtract" data-input="light-intensity" id="light-intensity-subtract">-</button>
-                            </div>
-                            <label for="light-color">Color (Hex):</label>
-                            <input type="color" id="light-color" value="#FFFFFF" class="input-field">
-                            <!-- Polet Light specific properties -->
-                            <div id="point-light-properties" class="light-type-properties top-seperator">
-                                <h3>Polet Light Properties</h3>
-                                <label for="point-light-x">Position X:</label>
-                                <div class="input-group">
-                                    <input type="number" id="point-light-x" value="0" step="1">
-                                    <button class="value-add" data-input="point-light-x" id="point-light-x-add">+</button>
-                                    <button class="value-subtract" data-input="point-light-x" id="point-light-x-subtract">-</button>
-                                </div>
-                                <label for="point-light-y">Position Y:</label>
-                                <div class="input-group">
-                                    <input type="number" id="point-light-y" value="0" step="1">
-                                    <button class="value-add" data-input="point-light-y" id="point-light-y-add">+</button>
-                                    <button class="value-subtract" data-input="point-light-y" id="point-light-y-subtract">-</button>
-                                </div>
-                                <label for="point-light-z">Position Z:</label>
-                                <div class="input-group">
-                                    <input type="number" id="point-light-z" value="0" step="1">
-                                    <button class="value-add" data-input="point-light-z" id="point-light-z-add">+</button>
-                                    <button class="value-subtract" data-input="point-light-z" id="point-light-z-subtract">-</button>
-                                </div>
-                            </div>
-                            <!-- Directional Light specific properties -->
-                            <div id="directional-light-properties" class="light-type-properties top-seperator">
-                                <h3>Directional Light Properties</h3>
-                                <label for="directional-light-x">Direction X:</label>
-                                <div class="input-group">
-                                    <input type="number" id="directional-light-x" value="0" step="0.1">
-                                    <button class="value-add" data-input="directional-light-x" id="directional-light-x-add">+</button>
-                                    <button class="value-subtract" data-input="directional-light-x" id="directional-light-x-subtract">-</button>
-                                </div>
-                                <label for="directional-light-y">Direction Y:</label>
-                                <div class="input-group">
-                                    <input type="number" id="directional-light-y" value="-1" step="0.1">
-                                    <button class="value-add" data-input="directional-light-y" id="directional-light-y-add">+</button>
-                                    <button class="value-subtract" data-input="directional-light-y" id="directional-light-y-subtract">-</button>
-                                </div>
-                                <label for="directional-light-z">Direction Z:</label>
-                                <div class="input-group">
-                                    <input type="number" id="directional-light-z" value="0" step="0.1">
-                                    <button class="value-add" data-input="directional-light-z" id="directional-light-z-add">+</button>
-                                    <button class="value-subtract" data-input="directional-light-z" id="directional-light-z-subtract">-</button>
-                                </div>
-                            </div>
-                            <!-- Spot Light specific properties -->
-                            <div id="spot-light-properties" class="light-type-properties top-seperator">
-                                <h3>Spot Light Properties</h3>
-                                <label for="spot-light-pos-x">Position X:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-pos-x" value="0" step="1">
-                                    <button class="value-add" data-input="spot-light-pos-x" id="spot-light-pos-x-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-pos-x" id="spot-light-pos-x-subtract">-</button>
-                                </div>
-                                <label for="spot-light-pos-y">Position Y:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-pos-y" value="0" step="1">
-                                    <button class="value-add" data-input="spot-light-pos-y" id="spot-light-pos-y-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-pos-y" id="spot-light-pos-y-subtract">-</button>
-                                </div>
-                                <label for="spot-light-pos-z">Position Z:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-pos-z" value="0" step="1">
-                                    <button class="value-add" data-input="spot-light-pos-z" id="spot-light-pos-z-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-pos-z" id="spot-light-pos-z-subtract">-</button>
-                                </div>
-                                <label for="spot-light-dir-x">Direction X:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-dir-x" value="0" step="0.1">
-                                    <button class="value-add" data-input="spot-light-dir-x" id="spot-light-dir-x-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-dir-x" id="spot-light-dir-x-subtract">-</button>
-                                </div>
-                                <label for="spot-light-dir-y">Direction Y:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-dir-y" value="-1" step="0.1">
-                                    <button class="value-add" data-input="spot-light-dir-y" id="spot-light-dir-y-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-dir-y" id="spot-light-dir-y-subtract">-</button>
-                                </div>
-                                <label for="spot-light-dir-z">Direction Z:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-dir-z" value="0" step="0.1">
-                                    <button class="value-add" data-input="spot-light-dir-z" id="spot-light-dir-z-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-dir-z" id="spot-light-dir-z-subtract">-</button>
-                                </div>
-                                <label for="spot-light-angle">Angle:</label>
-                                <div class="input-group">
-                                    <input type="number" id="spot-light-angle" value="30" min="0" max="90" step="1">
-                                    <button class="value-add" data-input="spot-light-angle" id="spot-light-angle-add">+</button>
-                                    <button class="value-subtract" data-input="spot-light-angle" id="spot-light-angle-subtract">-</button>
-                                </div>
+                    <div id="structure-right-panel">
+                        <div id="structure-node-properties" class="panel-section">
+                            <h2>Node Properties</h2>
+                            <div id="node-properties-content">
+                                <button id="add-node-property-button" class="button-full-width">Add Node</button>
                             </div>
                         </div>
-                    </div>
-                    <div id="foliage-properties" class="graph-node-properties top-seperator panel-section hidden">
-                        <h2>Foliage Properties</h2>
-                        <div id="foliage-properties-content">
-                            <p class="mb-md">Select a foliage type</p>
-                            <select id="foliage-type-select" class="input-field">
-                                <option value="tree">Tree</option>
-                                <option value="bush">Bush</option>
-                                <option value="grass">Grass</option>
-                            </select>
-                            <!-- Common foliage properties -->
-                            <label for="foliage-density">Density:</label>
-                            <div class="input-group">
-                                <input type="number" id="foliage-density" value="100" min="0" step="10">
-                                <button class="value-add" data-input="foliage-density" id="foliage-density-add">+</button>
-                                <button class="value-subtract" data-input="foliage-density" id="foliage-density-subtract">-</button>
-                            </div>
-                            <label for="foliage-scale">Scale:</label>
-                            <div class="input-group">
-                                <input type="number" id="foliage-scale" value="1" min="0.1" step="0.1">
-                                <button class="value-add" data-input="foliage-scale" id="foliage-scale-add">+</button>
-                                <button class="value-subtract" data-input="foliage-scale" id="foliage-scale-subtract">-</button>
-                            </div>
-                            <!-- Tree specific properties -->
-                            <div id="tree-foliage-properties" class="foliage-type-properties top-seperator">
-                                <h3>Tree Properties</h3>
-                                <label for="tree-height">Trunk Height:</label>
-                                <div class="input-group">
-                                    <input type="number" id="tree-height" value="5" min="0.1" step="0.5">
-                                    <button class="value-add" data-input="tree-height" id="tree-height-add">+</button>
-                                    <button class="value-subtract" data-input="tree-height" id="tree-height-subtract">-</button>
-                                </div>
-                                <label for="tree-leaves-color">Leaves Color (Hex):</label>
-                                <input type="color" id="tree-leaves-color" value="#228B22" class="input-field">
-                            </div>
-                            <!-- Bush specific properties -->
-                            <div id="bush-foliage-properties" class="foliage-type-properties top-seperator">
-                                <h3>Bush Properties</h3>
-                                <label for="bush-radius">Radius:</label>
-                                <div class="input-group">
-                                    <input type="number" id="bush-radius" value="1.5" min="0.1" step="0.1">
-                                    <button class="value-add" data-input="bush-radius" id="bush-radius-add">+</button>
-                                    <button class="value-subtract" data-input="bush-radius" id="bush-radius-subtract">-</button>
-                                </div>
-                                <label for="bush-color">Color (Hex):</label>
-                                <input type="color" id="bush-color" value="#556B2F" class="input-field">
-                            </div>
-                            <!-- Grass specific properties -->
-                            <div id="grass-foliage-properties" class="foliage-type-properties top-seperator">
-                                <h3>Grass Properties</h3>
-                                <label for="grass-patch-size">Patch Size:</label>
-                                <div class="input-group">
-                                    <input type="number" id="grass-patch-size" value="10" min="1" step="1">
-                                    <button class="value-add" data-input="grass-patch-size" id="grass-patch-size-add">+</button>
-                                    <button class="value-subtract" data-input="grass-patch-size" id="grass-patch-size-subtract">-</button>
-                                </div>
-                                <label for="grass-color">Color (Hex):</label>
-                                <input type="color" id="grass-color" value="#7CFC00" class="input-field">
+                        <div id="shape-properties" class="graph-node-properties top-seperator panel-section">
+                            <h2>Shape Properties</h2>
+                            <div id="shape-properties-content">
+                                <p class="mb-md">Select a node type</p>
+                                <select id="node-type-select" class="input-field">
+                                    <option value="shape">Shape</option>
+                                    <option value="light">Light</option>
+                                    <option value="foliage">Foliage</option>
+                                </select>
+                                <button id="add-point-node-button" class="button-full-width" onclick="addPointNode()">Add Point</button>
                             </div>
                         </div>
-                    </div>
-                    <div id="point-node-properties" class="top-seperator panel-section">
-                        <div id="point-node-properties-header" class="flex-row justify-between items-center toggle-container">
-                            <h2>Polet Node Properties</h2>
-                            <input type="checkbox" id="point-node-toggle" onclick="togglePointNodeProperties(this)" checked/>
-                        </div>
-                        <div class="point-node-properties-panel">
-                            <div id="point-node-position-properties-content" class="point-node-position-properties">
-                                <ul id="point-node-list">
-                                    <li>
-                                        <label for="center-x">X:</label>
-                                        <div class="input-group" data-target="position" data-params="x">
-                                            <input type="number" id="center-x" value="-5" step="1">
-                                            <button class="value-add" data-input="center-x" id="center-x-add">+</button>
-                                            <button class="value-subtract" data-input="center-x" id="center-x-subtract">-</button>
-                                        </div>
-                                        <label for="center-y">Y:</label>
-                                        <div class="input-group" data-target="position" data-params="y">
-                                            <input type="number" id="center-y" value="-5" step="1">
-                                            <button class="value-add" data-input="center-y" id="center-y-add">+</button>
-                                            <button class="value-subtract" data-input="center-y" id="center-y-subtract">-</button>
-                                        </div>
-                                        <label for="center-z">Z:</label>
-                                        <div class="input-group" data-target="position" data-params="z">
-                                            <input type="number" id="center-z" value="-5" step="1">
-                                            <button class="value-add" data-input="center-z" id="center-z-add">+</button>
-                                            <button class="value-subtract" data-input="center-z" id="center-z-subtract">-</button>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div id="point-node-rotation-toggle" class="toggle-container">
-                                <label for="rotation-toggle">Enable Rotation:</label>
-                                <input type="checkbox" id="rotation-toggle" onclick="toggleRotationProperties(this)">
-                            </div>
-                            <div id="point-node-rotation-properties-content" class="point-node-rotation-properties">
-                                <ul id="point-node-list">
-                                    <li>
-                                        <label for="rotation-x">Rotation X:</label>
-                                        <div class="input-group" data-target="rotation" data-params="x">
-                                            <input type="number" id="rotation-x" value="0" step="1">
-                                            <button class="value-add" data-input="rotation-x" id="rotation-x-add">+</button>
-                                            <button class="value-subtract" data-input="rotation-x" id="rotation-x-subtract">-</button>
-                                        </div>
-                                        <label for="rotation-y">Rotation Y:</label>
-                                        <div class="input-group" data-target="rotation" data-params="y">
-                                            <input type="number" id="rotation-y" value="0" step="1">
-                                            <button class="value-add" data-input="rotation-y" id="rotation-y-add">+</button>
-                                            <button class="value-subtract" data-input="rotation-y" id="rotation-y-subtract">-</button>
-                                        </div>
-                                        <label for="rotation-z">Rotation Z:</label>
-                                        <div class="input-group" data-target="rotation" data-params="z">
-                                            <input type="number" id="rotation-z" value="0" step="1">
-                                            <button class="value-add" data-input="rotation-z" id="rotation-z-add">+</button>
-                                            <button class="value-subtract" data-input="rotation-z" id="rotation-z-subtract">-</button>
-                                        </div>  
-                                    </li>
-                                </ul>
-                            </div>
-                            <p class="mb-md">Select a shape type</p>
-                            <select id="shape-type-select" class="input-field">
-                                <option value="cube">Cube</option>
-                                <option value="sphere">Sphere</option>
-                                <option value="cylinder">Cylinder</option>
-                                <option value="taperedCylinder">Tapered Cylinder</option>
-                                <option value="pyramid">Pyramid</option>
-                                <option value="cone">Cone</option>
-                                <option value="trianglePrism">Triangle Prism</option>
-                            </select>
-                            <p class="mb-md">Select a shape effect</p>
-                            <select id="shape-effect-select" class="input-field">
-                                <option value="union">Union</option>
-                                <option value="intersect">Intersect</option>
-                                <option value="difference">Difference</option>
-                                <option value="difference-reverse">Difference Reverse</option>
-                                <option value="symmetric-difference">Symmetric Difference</option>
-                                <option value="subtract">Subtract</option>
-                                <option value="subtract-reverse">Subtract Reverse</option>
-                            </select>
-                            <div id="cube-shape-properties" class="shape-properties top-seperator">
-                                <h3>Cube Properties</h3>
-                                <label for="cube-width">Width:</label>
-                                <div class="input-group" data-target="params" data-params="width">
-                                    <input type="number" id="cube-width" value="10" min="1" step="1">
-                                    <button class="value-add" data-input="cube-width" id="cube-width-add">+</button>
-                                    <button class="value-subtract" data-input="cube-width" id="cube-width-subtract">-</button>
+                        <div id="light-properties" class="graph-node-properties top-seperator panel-section hidden">
+                            <h2>Light Properties</h2>
+                            <div id="light-properties-content">
+                                <p class="mb-md">Select a light type</p>
+                                <select id="light-type-select" class="input-field">
+                                    <option value="point">Polet Light</option>
+                                    <option value="directional">Directional Light</option>
+                                    <option value="spot">Spot Light</option>
+                                </select>
+                                <!-- Common light properties -->
+                                <label for="light-intensity">Intensity:</label>
+                                <div class="input-group">
+                                    <input type="number" id="light-intensity" value="1" min="0" step="0.1">
+                                    <button class="value-add" data-input="light-intensity" id="light-intensity-add">+</button>
+                                    <button class="value-subtract" data-input="light-intensity" id="light-intensity-subtract">-</button>
                                 </div>
-                                <label for="cube-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="cube-height" value="10" min="1" step="1">
-                                    <button class="value-add" data-input="cube-height" id="cube-height-add">+</button>
-                                    <button class="value-subtract" data-input="cube-height" id="cube-height-subtract">-</button>
-                                </div>
-                                <label for="cube-depth">Depth:</label>
-                                <div class="input-group" data-target="params" data-params="depth">
-                                    <input type="number" id="cube-depth" value="10" min="1" step="1">
-                                    <button class="value-add" data-input="cube-depth" id="cube-depth-add">+</button>
-                                    <button class="value-subtract" data-input="cube-depth" id="cube-depth-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="sphere-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Sphere Properties</h3>
-                                <label for="sphere-radius">Radius:</label>
-                                <div class="input-group" data-target="params" data-params="radius">
-                                    <input type="number" id="sphere-radius" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="sphere-radius" id="sphere-radius-add">+</button>
-                                    <button class="value-subtract" data-input="sphere-radius" id="sphere-radius-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="cylinder-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Cylinder Properties</h3>
-                                <label for="cylinder-radius">Radius:</label>
-                                <div class="input-group" data-target="params" data-params="radius">
-                                    <input type="number" id="cylinder-radius" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="cylinder-radius" id="cylinder-radius-add">+</button>
-                                    <button class="value-subtract" data-input="cylinder-radius" id="cylinder-radius-subtract">-</button>
-                                </div>
-                                <label for="cylinder-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="cylinder-height" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="cylinder-height" id="cylinder-height-add">+</button>
-                                    <button class="value-subtract" data-input="cylinder-height" id="cylinder-height-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="taperedCylinder-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Tapered Cylinder Properties</h3>
-                                <label for="taperedCylinder-topRadius">Top Radius:</label>
-                                <div class="input-group" data-target="params" data-params="topRadius">
-                                    <input type="number" id="taperedCylinder-topRadius" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="taperedCylinder-topRadius" id="taperedCylinder-topRadius-add">+</button>
-                                    <button class="value-subtract" data-input="taperedCylinder-topRadius" id="taperedCylinder-topRadius-subtract">-</button>
-                                </div>
-                                <label for="taperedCylinder-bottomRadius">Bottom Radius:</label>
-                                <div class="input-group" data-target="params" data-params="bottomRadius">
-                                    <input type="number" id="taperedCylinder-bottomRadius" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="taperedCylinder-bottomRadius" id="taperedCylinder-bottomRadius-add">+</button>
-                                    <button class="value-subtract" data-input="taperedCylinder-bottomRadius" id="taperedCylinder-bottomRadius-subtract">-</button>
-                                </div>
-                                <label for="taperedCylinder-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="taperedCylinder-height" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="taperedCylinder-height" id="taperedCylinder-height-add">+</button>
-                                    <button class="value-subtract" data-input="taperedCylinder-height" id="taperedCylinder-height-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="pyramid-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Pyramid Properties</h3>
-                                <label for="pyramid-base">Base Size:</label>
-                                <div class="input-group" data-target="params" data-params="base">
-                                    <input type="number" id="pyramid-base" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="pyramid-base" id="pyramid-base-add">+</button>
-                                    <button class="value-subtract" data-input="pyramid-base" id="pyramid-base-subtract">-</button>
-                                </div>
-                                <label for="pyramid-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="pyramid-height" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="pyramid-height" id="pyramid-height-add">+</button>
-                                    <button class="value-subtract" data-input="pyramid-height" id="pyramid-height-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="cone-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Cone Properties</h3>
-                                <label for="cone-radius">Radius:</label>
-                                <div class="input-group" data-target="params" data-params="radius">
-                                    <input type="number" id="cone-radius" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="cone-radius" id="cone-radius-add">+</button>
-                                    <button class="value-subtract" data-input="cone-radius" id="cone-radius-subtract">-</button>
-                                </div>
-                                <label for="cone-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="cone-height" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="cone-height" id="cone-height-add">+</button>
-                                    <button class="value-subtract" data-input="cone-height" id="cone-height-subtract">-</button>
-                                </div>
-                            </div>
-                            <div id="trianglePrism-shape-properties" class="shape-properties top-seperator hidden">
-                                <h3>Triangle Prism Properties</h3>
-                                <label for="trianglePrism-width">Width:</label>
-                                <div class="input-group" data-target="params" data-params="width">
-                                    <input type="number" id="trianglePrism-width" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="trianglePrism-width" id="trianglePrism-width-add">+</button>
-                                    <button class="value-subtract" data-input="trianglePrism-width" id="trianglePrism-width-subtract">-</button>
-                                </div>
-                                <label for="trianglePrism-height">Height:</label>
-                                <div class="input-group" data-target="params" data-params="height">
-                                    <input type="number" id="trianglePrism-height" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="trianglePrism-height" id="trianglePrism-height-add">+</button>
-                                    <button class="value-subtract" data-input="trianglePrism-height" id="trianglePrism-height-subtract">-</button>
-                                </div>
-                                <label for="trianglePrism-depth">Depth:</label>
-                                <div class="input-group" data-target="params" data-params="depth">
-                                    <input type="number" id="trianglePrism-depth" value="1" min="1" step="1">
-                                    <button class="value-add" data-input="trianglePrism-depth" id="trianglePrism-depth-add">+</button>
-                                    <button class="value-subtract" data-input="trianglePrism-depth" id="trianglePrism-depth-subtract">-</button>
-                                </div>
-                            </div>
-                        </div>  
-                    </div>
-                    <div id="graph-node-properties" class="top-seperator panel-section">
-                        <div id="graph-node-properties-header" class="flex-row justify-between items-center toggle-container">
-                            <h2>Graph Node Properties</h2>
-                            <input type="checkbox" id="graph-node-toggle" onclick="toggleGraphNodeProperties(this)" checked/>
-                        </div>
-                        <div class="graph-node-properties-panel">
-                            <div id="graph-node-generation-properties-content" class="graph-node-generation-properties">
-                                <div class="noise-group">   
-                                    <div class="graph-input-group" data-target="params" data-params="count">
-                                        <label for="graph-node-noise-type">Graph Count:</label>
-                                        <input type="number" id="graph-count" value="1" min="1" step="1" class="input-field">
+                                <label for="light-color">Color (Hex):</label>
+                                <input type="color" id="light-color" value="#FFFFFF" class="input-field">
+                                <!-- Polet Light specific properties -->
+                                <div id="point-light-properties" class="light-type-properties top-seperator">
+                                    <h3>Polet Light Properties</h3>
+                                    <label for="point-light-x">Position X:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="point-light-x" value="0" step="1">
+                                        <button class="value-add" data-input="point-light-x" id="point-light-x-add">+</button>
+                                        <button class="value-subtract" data-input="point-light-x" id="point-light-x-subtract">-</button>
                                     </div>
-                                    <div class="graph-input-group" data-target="params" data-params="distanceX">
-                                        <label for="graph-node-noise-type">Graph X Distance:</label>
-                                        <input type="number" id="graph-distance-x" value="5" min="1" step="1" class="input-field">
+                                    <label for="point-light-y">Position Y:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="point-light-y" value="0" step="1">
+                                        <button class="value-add" data-input="point-light-y" id="point-light-y-add">+</button>
+                                        <button class="value-subtract" data-input="point-light-y" id="point-light-y-subtract">-</button>
                                     </div>
-                                    <div class="graph-input-group" data-target="params" data-params="distanceY">
-                                        <label for="graph-node-noise-type">Graph Y Distance:</label>
-                                        <input type="number" id="graph-distance-y" value="5" min="1" step="1" class="input-field">
+                                    <label for="point-light-z">Position Z:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="point-light-z" value="0" step="1">
+                                        <button class="value-add" data-input="point-light-z" id="point-light-z-add">+</button>
+                                        <button class="value-subtract" data-input="point-light-z" id="point-light-z-subtract">-</button>
                                     </div>
-                                    <div class="graph-input-group" data-target="params" data-params="distanceZ">
-                                        <label for="graph-node-noise-type">Graph Z Distance:</label>
-                                        <input type="number" id="graph-distance-z" value="5" min="1" step="1" class="input-field">
+                                </div>
+                                <!-- Directional Light specific properties -->
+                                <div id="directional-light-properties" class="light-type-properties top-seperator">
+                                    <h3>Directional Light Properties</h3>
+                                    <label for="directional-light-x">Direction X:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="directional-light-x" value="0" step="0.1">
+                                        <button class="value-add" data-input="directional-light-x" id="directional-light-x-add">+</button>
+                                        <button class="value-subtract" data-input="directional-light-x" id="directional-light-x-subtract">-</button>
+                                    </div>
+                                    <label for="directional-light-y">Direction Y:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="directional-light-y" value="-1" step="0.1">
+                                        <button class="value-add" data-input="directional-light-y" id="directional-light-y-add">+</button>
+                                        <button class="value-subtract" data-input="directional-light-y" id="directional-light-y-subtract">-</button>
+                                    </div>
+                                    <label for="directional-light-z">Direction Z:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="directional-light-z" value="0" step="0.1">
+                                        <button class="value-add" data-input="directional-light-z" id="directional-light-z-add">+</button>
+                                        <button class="value-subtract" data-input="directional-light-z" id="directional-light-z-subtract">-</button>
+                                    </div>
+                                </div>
+                                <!-- Spot Light specific properties -->
+                                <div id="spot-light-properties" class="light-type-properties top-seperator">
+                                    <h3>Spot Light Properties</h3>
+                                    <label for="spot-light-pos-x">Position X:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-pos-x" value="0" step="1">
+                                        <button class="value-add" data-input="spot-light-pos-x" id="spot-light-pos-x-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-pos-x" id="spot-light-pos-x-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-pos-y">Position Y:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-pos-y" value="0" step="1">
+                                        <button class="value-add" data-input="spot-light-pos-y" id="spot-light-pos-y-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-pos-y" id="spot-light-pos-y-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-pos-z">Position Z:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-pos-z" value="0" step="1">
+                                        <button class="value-add" data-input="spot-light-pos-z" id="spot-light-pos-z-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-pos-z" id="spot-light-pos-z-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-dir-x">Direction X:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-dir-x" value="0" step="0.1">
+                                        <button class="value-add" data-input="spot-light-dir-x" id="spot-light-dir-x-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-dir-x" id="spot-light-dir-x-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-dir-y">Direction Y:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-dir-y" value="-1" step="0.1">
+                                        <button class="value-add" data-input="spot-light-dir-y" id="spot-light-dir-y-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-dir-y" id="spot-light-dir-y-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-dir-z">Direction Z:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-dir-z" value="0" step="0.1">
+                                        <button class="value-add" data-input="spot-light-dir-z" id="spot-light-dir-z-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-dir-z" id="spot-light-dir-z-subtract">-</button>
+                                    </div>
+                                    <label for="spot-light-angle">Angle:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="spot-light-angle" value="30" min="0" max="90" step="1">
+                                        <button class="value-add" data-input="spot-light-angle" id="spot-light-angle-add">+</button>
+                                        <button class="value-subtract" data-input="spot-light-angle" id="spot-light-angle-subtract">-</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>  
+                        </div>
+                        <div id="foliage-properties" class="graph-node-properties top-seperator panel-section hidden">
+                            <h2>Foliage Properties</h2>
+                            <div id="foliage-properties-content">
+                                <p class="mb-md">Select a foliage type</p>
+                                <select id="foliage-type-select" class="input-field">
+                                    <option value="tree">Tree</option>
+                                    <option value="bush">Bush</option>
+                                    <option value="grass">Grass</option>
+                                </select>
+                                <!-- Common foliage properties -->
+                                <label for="foliage-density">Density:</label>
+                                <div class="input-group">
+                                    <input type="number" id="foliage-density" value="100" min="0" step="10">
+                                    <button class="value-add" data-input="foliage-density" id="foliage-density-add">+</button>
+                                    <button class="value-subtract" data-input="foliage-density" id="foliage-density-subtract">-</button>
+                                </div>
+                                <label for="foliage-scale">Scale:</label>
+                                <div class="input-group">
+                                    <input type="number" id="foliage-scale" value="1" min="0.1" step="0.1">
+                                    <button class="value-add" data-input="foliage-scale" id="foliage-scale-add">+</button>
+                                    <button class="value-subtract" data-input="foliage-scale" id="foliage-scale-subtract">-</button>
+                                </div>
+                                <!-- Tree specific properties -->
+                                <div id="tree-foliage-properties" class="foliage-type-properties top-seperator">
+                                    <h3>Tree Properties</h3>
+                                    <label for="tree-height">Trunk Height:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="tree-height" value="5" min="0.1" step="0.5">
+                                        <button class="value-add" data-input="tree-height" id="tree-height-add">+</button>
+                                        <button class="value-subtract" data-input="tree-height" id="tree-height-subtract">-</button>
+                                    </div>
+                                    <label for="tree-leaves-color">Leaves Color (Hex):</label>
+                                    <input type="color" id="tree-leaves-color" value="#228B22" class="input-field">
+                                </div>
+                                <!-- Bush specific properties -->
+                                <div id="bush-foliage-properties" class="foliage-type-properties top-seperator">
+                                    <h3>Bush Properties</h3>
+                                    <label for="bush-radius">Radius:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="bush-radius" value="1.5" min="0.1" step="0.1">
+                                        <button class="value-add" data-input="bush-radius" id="bush-radius-add">+</button>
+                                        <button class="value-subtract" data-input="bush-radius" id="bush-radius-subtract">-</button>
+                                    </div>
+                                    <label for="bush-color">Color (Hex):</label>
+                                    <input type="color" id="bush-color" value="#556B2F" class="input-field">
+                                </div>
+                                <!-- Grass specific properties -->
+                                <div id="grass-foliage-properties" class="foliage-type-properties top-seperator">
+                                    <h3>Grass Properties</h3>
+                                    <label for="grass-patch-size">Patch Size:</label>
+                                    <div class="input-group">
+                                        <input type="number" id="grass-patch-size" value="10" min="1" step="1">
+                                        <button class="value-add" data-input="grass-patch-size" id="grass-patch-size-add">+</button>
+                                        <button class="value-subtract" data-input="grass-patch-size" id="grass-patch-size-subtract">-</button>
+                                    </div>
+                                    <label for="grass-color">Color (Hex):</label>
+                                    <input type="color" id="grass-color" value="#7CFC00" class="input-field">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="point-node-properties" class="top-seperator panel-section">
+                            <div id="point-node-properties-header" class="flex-row justify-between items-center toggle-container">
+                                <h2>Polet Node Properties</h2>
+                                <input type="checkbox" id="point-node-toggle" onclick="togglePointNodeProperties(this)" checked/>
+                            </div>
+                            <div class="point-node-properties-panel">
+                                <div id="point-node-position-properties-content" class="point-node-position-properties">
+                                    <ul id="point-node-list">
+                                        <li>
+                                            <label for="center-x">X:</label>
+                                            <div class="input-group" data-target="position" data-params="x">
+                                                <input type="number" id="center-x" value="-5" step="1">
+                                                <button class="value-add" data-input="center-x" id="center-x-add">+</button>
+                                                <button class="value-subtract" data-input="center-x" id="center-x-subtract">-</button>
+                                            </div>
+                                            <label for="center-y">Y:</label>
+                                            <div class="input-group" data-target="position" data-params="y">
+                                                <input type="number" id="center-y" value="-5" step="1">
+                                                <button class="value-add" data-input="center-y" id="center-y-add">+</button>
+                                                <button class="value-subtract" data-input="center-y" id="center-y-subtract">-</button>
+                                            </div>
+                                            <label for="center-z">Z:</label>
+                                            <div class="input-group" data-target="position" data-params="z">
+                                                <input type="number" id="center-z" value="-5" step="1">
+                                                <button class="value-add" data-input="center-z" id="center-z-add">+</button>
+                                                <button class="value-subtract" data-input="center-z" id="center-z-subtract">-</button>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div id="point-node-rotation-toggle" class="toggle-container">
+                                    <label for="rotation-toggle">Enable Rotation:</label>
+                                    <input type="checkbox" id="rotation-toggle" onclick="toggleRotationProperties(this)">
+                                </div>
+                                <div id="point-node-rotation-properties-content" class="point-node-rotation-properties">
+                                    <ul id="point-node-list">
+                                        <li>
+                                            <label for="rotation-x">Rotation X:</label>
+                                            <div class="input-group" data-target="rotation" data-params="x">
+                                                <input type="number" id="rotation-x" value="0" step="1">
+                                                <button class="value-add" data-input="rotation-x" id="rotation-x-add">+</button>
+                                                <button class="value-subtract" data-input="rotation-x" id="rotation-x-subtract">-</button>
+                                            </div>
+                                            <label for="rotation-y">Rotation Y:</label>
+                                            <div class="input-group" data-target="rotation" data-params="y">
+                                                <input type="number" id="rotation-y" value="0" step="1">
+                                                <button class="value-add" data-input="rotation-y" id="rotation-y-add">+</button>
+                                                <button class="value-subtract" data-input="rotation-y" id="rotation-y-subtract">-</button>
+                                            </div>
+                                            <label for="rotation-z">Rotation Z:</label>
+                                            <div class="input-group" data-target="rotation" data-params="z">
+                                                <input type="number" id="rotation-z" value="0" step="1">
+                                                <button class="value-add" data-input="rotation-z" id="rotation-z-add">+</button>
+                                                <button class="value-subtract" data-input="rotation-z" id="rotation-z-subtract">-</button>
+                                            </div>  
+                                        </li>
+                                    </ul>
+                                </div>
+                                <p class="mb-md">Select a shape type</p>
+                                <select id="shape-type-select" class="input-field">
+                                    <option value="cube">Cube</option>
+                                    <option value="sphere">Sphere</option>
+                                    <option value="cylinder">Cylinder</option>
+                                    <option value="taperedCylinder">Tapered Cylinder</option>
+                                    <option value="pyramid">Pyramid</option>
+                                    <option value="cone">Cone</option>
+                                    <option value="trianglePrism">Triangle Prism</option>
+                                </select>
+                                <p class="mb-md">Select a shape effect</p>
+                                <select id="shape-effect-select" class="input-field">
+                                    <option value="union">Union</option>
+                                    <option value="intersect">Intersect</option>
+                                    <option value="difference">Difference</option>
+                                    <option value="difference-reverse">Difference Reverse</option>
+                                    <option value="symmetric-difference">Symmetric Difference</option>
+                                    <option value="subtract">Subtract</option>
+                                    <option value="subtract-reverse">Subtract Reverse</option>
+                                </select>
+                                <div id="cube-shape-properties" class="shape-properties top-seperator">
+                                    <h3>Cube Properties</h3>
+                                    <label for="cube-width">Width:</label>
+                                    <div class="input-group" data-target="params" data-params="width">
+                                        <input type="number" id="cube-width" value="10" min="1" step="1">
+                                        <button class="value-add" data-input="cube-width" id="cube-width-add">+</button>
+                                        <button class="value-subtract" data-input="cube-width" id="cube-width-subtract">-</button>
+                                    </div>
+                                    <label for="cube-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="cube-height" value="10" min="1" step="1">
+                                        <button class="value-add" data-input="cube-height" id="cube-height-add">+</button>
+                                        <button class="value-subtract" data-input="cube-height" id="cube-height-subtract">-</button>
+                                    </div>
+                                    <label for="cube-depth">Depth:</label>
+                                    <div class="input-group" data-target="params" data-params="depth">
+                                        <input type="number" id="cube-depth" value="10" min="1" step="1">
+                                        <button class="value-add" data-input="cube-depth" id="cube-depth-add">+</button>
+                                        <button class="value-subtract" data-input="cube-depth" id="cube-depth-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="sphere-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Sphere Properties</h3>
+                                    <label for="sphere-radius">Radius:</label>
+                                    <div class="input-group" data-target="params" data-params="radius">
+                                        <input type="number" id="sphere-radius" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="sphere-radius" id="sphere-radius-add">+</button>
+                                        <button class="value-subtract" data-input="sphere-radius" id="sphere-radius-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="cylinder-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Cylinder Properties</h3>
+                                    <label for="cylinder-radius">Radius:</label>
+                                    <div class="input-group" data-target="params" data-params="radius">
+                                        <input type="number" id="cylinder-radius" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="cylinder-radius" id="cylinder-radius-add">+</button>
+                                        <button class="value-subtract" data-input="cylinder-radius" id="cylinder-radius-subtract">-</button>
+                                    </div>
+                                    <label for="cylinder-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="cylinder-height" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="cylinder-height" id="cylinder-height-add">+</button>
+                                        <button class="value-subtract" data-input="cylinder-height" id="cylinder-height-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="taperedCylinder-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Tapered Cylinder Properties</h3>
+                                    <label for="taperedCylinder-topRadius">Top Radius:</label>
+                                    <div class="input-group" data-target="params" data-params="topRadius">
+                                        <input type="number" id="taperedCylinder-topRadius" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="taperedCylinder-topRadius" id="taperedCylinder-topRadius-add">+</button>
+                                        <button class="value-subtract" data-input="taperedCylinder-topRadius" id="taperedCylinder-topRadius-subtract">-</button>
+                                    </div>
+                                    <label for="taperedCylinder-bottomRadius">Bottom Radius:</label>
+                                    <div class="input-group" data-target="params" data-params="bottomRadius">
+                                        <input type="number" id="taperedCylinder-bottomRadius" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="taperedCylinder-bottomRadius" id="taperedCylinder-bottomRadius-add">+</button>
+                                        <button class="value-subtract" data-input="taperedCylinder-bottomRadius" id="taperedCylinder-bottomRadius-subtract">-</button>
+                                    </div>
+                                    <label for="taperedCylinder-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="taperedCylinder-height" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="taperedCylinder-height" id="taperedCylinder-height-add">+</button>
+                                        <button class="value-subtract" data-input="taperedCylinder-height" id="taperedCylinder-height-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="pyramid-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Pyramid Properties</h3>
+                                    <label for="pyramid-base">Base Size:</label>
+                                    <div class="input-group" data-target="params" data-params="base">
+                                        <input type="number" id="pyramid-base" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="pyramid-base" id="pyramid-base-add">+</button>
+                                        <button class="value-subtract" data-input="pyramid-base" id="pyramid-base-subtract">-</button>
+                                    </div>
+                                    <label for="pyramid-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="pyramid-height" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="pyramid-height" id="pyramid-height-add">+</button>
+                                        <button class="value-subtract" data-input="pyramid-height" id="pyramid-height-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="cone-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Cone Properties</h3>
+                                    <label for="cone-radius">Radius:</label>
+                                    <div class="input-group" data-target="params" data-params="radius">
+                                        <input type="number" id="cone-radius" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="cone-radius" id="cone-radius-add">+</button>
+                                        <button class="value-subtract" data-input="cone-radius" id="cone-radius-subtract">-</button>
+                                    </div>
+                                    <label for="cone-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="cone-height" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="cone-height" id="cone-height-add">+</button>
+                                        <button class="value-subtract" data-input="cone-height" id="cone-height-subtract">-</button>
+                                    </div>
+                                </div>
+                                <div id="trianglePrism-shape-properties" class="shape-properties top-seperator hidden">
+                                    <h3>Triangle Prism Properties</h3>
+                                    <label for="trianglePrism-width">Width:</label>
+                                    <div class="input-group" data-target="params" data-params="width">
+                                        <input type="number" id="trianglePrism-width" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="trianglePrism-width" id="trianglePrism-width-add">+</button>
+                                        <button class="value-subtract" data-input="trianglePrism-width" id="trianglePrism-width-subtract">-</button>
+                                    </div>
+                                    <label for="trianglePrism-height">Height:</label>
+                                    <div class="input-group" data-target="params" data-params="height">
+                                        <input type="number" id="trianglePrism-height" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="trianglePrism-height" id="trianglePrism-height-add">+</button>
+                                        <button class="value-subtract" data-input="trianglePrism-height" id="trianglePrism-height-subtract">-</button>
+                                    </div>
+                                    <label for="trianglePrism-depth">Depth:</label>
+                                    <div class="input-group" data-target="params" data-params="depth">
+                                        <input type="number" id="trianglePrism-depth" value="1" min="1" step="1">
+                                        <button class="value-add" data-input="trianglePrism-depth" id="trianglePrism-depth-add">+</button>
+                                        <button class="value-subtract" data-input="trianglePrism-depth" id="trianglePrism-depth-subtract">-</button>
+                                    </div>
+                                </div>
+                            </div>  
+                        </div>
+                        <div id="graph-node-properties" class="top-seperator panel-section">
+                            <div id="graph-node-properties-header" class="flex-row justify-between items-center toggle-container">
+                                <h2>Graph Node Properties</h2>
+                                <input type="checkbox" id="graph-node-toggle" onclick="toggleGraphNodeProperties(this)" checked/>
+                            </div>
+                            <div class="graph-node-properties-panel">
+                                <div id="graph-node-generation-properties-content" class="graph-node-generation-properties">
+                                    <div class="noise-group">   
+                                        <div class="graph-input-group" data-target="params" data-params="count">
+                                            <label for="graph-node-noise-type">Graph Count:</label>
+                                            <input type="number" id="graph-count" value="1" min="1" step="1" class="input-field">
+                                        </div>
+                                        <div class="graph-input-group" data-target="params" data-params="distanceX">
+                                            <label for="graph-node-noise-type">Graph X Distance:</label>
+                                            <input type="number" id="graph-distance-x" value="5" min="1" step="1" class="input-field">
+                                        </div>
+                                        <div class="graph-input-group" data-target="params" data-params="distanceY">
+                                            <label for="graph-node-noise-type">Graph Y Distance:</label>
+                                            <input type="number" id="graph-distance-y" value="5" min="1" step="1" class="input-field">
+                                        </div>
+                                        <div class="graph-input-group" data-target="params" data-params="distanceZ">
+                                            <label for="graph-node-noise-type">Graph Z Distance:</label>
+                                            <input type="number" id="graph-distance-z" value="5" min="1" step="1" class="input-field">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                    <div id="pixel-art-right-panel">    
+                        <div class="panel-section">
+                            <h2>Tools</h2>
+                            <div class="tool-column">
+                                <div class="tool-item">
+                                    <button id="pencil-tool" class="tool-button selected" title="Pencil Tool">
+                                        <i class="fas fa-pencil-alt"></i>
+                                        <span>Pencil</span>
+                                    </button>
+                                </div>
+                                <div class="tool-item">
+                                    <button id="eraser-tool" class="tool-button" title="Eraser Tool">
+                                        <i class="fas fa-eraser"></i>
+                                        <span>Eraser</span>
+                                    </button>
+                                </div>
+                                <div class="tool-item">
+                                    <button id="fill-tool" class="tool-button" title="Fill Tool">
+                                        <i class="fas fa-fill-drip"></i>
+                                        <span>Fill</span>
+                                    </button>
+                                </div>
+                                <div class="tool-item">
+                                    <button id="move-tool" class="tool-button" title="Move Tool">
+                                        <i class="fas fa-hand-paper"></i>
+                                        <span>Move</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-section top-seperator">
+                            <h2>Color</h2>
+                            <input id="color-picker" type="color" class="color-picker" value="#ff0000" title="Pick a color">
+                        </div>
+                        <div class="panel-section">
+                            <h2>Actions</h2>
+                            <input type="text" id="pixel-art-name" placeholder="Pixel Art Name" class="input-field mb-md" value="Untitled">
+                            <div class="tool-column">
+                                <div class="tool-item">
+                                    <button id="save-tool" class="tool-button selected" title="Save Tool">
+                                        <i class="fas fa-save"></i>
+                                        <span>Save</span>
+                                    </button>
+                                </div>
+                                <div class="tool-item">
+                                    <button id="load-tool" class="tool-button" title="Load Tool">
+                                        <i class="fas fa-folder-open"></i>
+                                        <span>Load</span>
+                                    </button>
+                                </div>
+                                <div class="tool-item">
+                                    <button id="create-new-tool" class="tool-button" title="Create New Tool">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Create New</span>
+                                    </button>
+                                    <div class="column-input-group">
+                                        <label for="new-texture-width">Width:
+                                            <input type="number" id="new-texture-width" placeholder="Width" value="16" min="1" step="1">
+                                        </label>
+                                        <label for="new-texture-height">Height:
+                                            <input type="number" id="new-texture-height" placeholder="Height" value="16" min="1" step="1">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Initialization scripts -->
 		<script src="./init.js"></script>
-        <script src="./noise.js"></script>
+
+        <!-- Math libraries -->
+        <script src="./math/noise.js"></script>
+        <script src="./math/matrix.js"></script>
+
 		<!-- Data scripts -->
 		<script src="./utils/voxelData.js"></script>
+        <script src="./shape.js"></script>
+        <script src="./block.js"></script>
+
 		<!-- Graphics scripts -->
 		<script src="./graphics/vertexBuffer.js"></script>
 		<script src="./graphics/indexBuffer.js"></script>
         <script src="./graphics/vao.js"></script>
+        <script src="./graphics/texture.js"></script>
 
-		<script src="./block.js"></script>
+        <!-- Rendering scripts -->
+        <script src="./rendering/camera.js"></script>
+        <script src="./rendering/mesh.js"></script>
 
+        <!-- Editor scripts -->
 		<script src="./editor/values.js"></script>
+        <script src="./structureRenderer.js"></script>
+        <script src="./pixelArtRenderer.js"></script>
+        <script src="./editor/nav.js"></script>
 
-		<script src="./shape.js"></script>
-
-		<script src="./rendering/mesh.js"></script>
-
+        <!-- Chunk management scripts -->
         <script src="./chunk.js"></script>
         <script src="./chunkManager.js"></script>
+
 
         <script type="module" src="editor/editor.js"></script>
         <script type="module" src="main.js"></script>

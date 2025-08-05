@@ -1,6 +1,5 @@
 class IndexBuffer {
-    constructor(gl, indices, usage = gl.STATIC_DRAW, IndexType = Uint16Array) {
-        this.gl = gl;
+    constructor(indices, usage = gl.STATIC_DRAW, IndexType = Uint16Array) {
         this.usage = usage;
         this.IndexType = IndexType;
         this.indices = indices;
@@ -11,16 +10,16 @@ class IndexBuffer {
 
     setData(indices) {
         this.indices = indices;
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new this.IndexType(indices), this.usage);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new this.IndexType(indices), this.usage);
     }
 
     bind() {
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffer);
     }
 
     unbind() {
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
 
     updateData(indices) {
@@ -29,12 +28,12 @@ class IndexBuffer {
 
     renew(indices) {
         this.delete();
-        this.buffer = this.gl.createBuffer();
+        this.buffer = gl.createBuffer();
         this.setData(indices);
     }
 
     delete() {
-        this.gl.deleteBuffer(this.buffer);
+        gl.deleteBuffer(this.buffer);
         this.buffer = null;
     }
 }

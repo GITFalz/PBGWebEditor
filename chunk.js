@@ -105,9 +105,9 @@ class Chunk {
             }
         });
 
-        let vertexBuffer = new VertexBuffer(window.gl, positions, Float32Array, 3);
-        let colorBuffer = new VertexBuffer(window.gl, colors, Float32Array, 3);
-        let indexBuffer = new IndexBuffer(window.gl, indices);
+        let vertexBuffer = new VertexBuffer(positions, Float32Array, 3);
+        let colorBuffer = new VertexBuffer(colors, Float32Array, 3);
+        let indexBuffer = new IndexBuffer(indices);
 
         if (this.vao) {
             this.vao.delete();
@@ -176,7 +176,7 @@ class Chunk {
 
         let modelMatrix = translate(identity(), this.x, this.y, this.z);
 
-        window.gl.uniformMatrix4fv(window.uModelMatrix, false, modelMatrix);
+        window.gl.uniformMatrix4fv(structure_uModelMatrix, false, modelMatrix);
         window.gl.drawElements(window.gl.TRIANGLES, this.indexCount, window.gl.UNSIGNED_SHORT, 0);
 
         this.vao.unbind();
