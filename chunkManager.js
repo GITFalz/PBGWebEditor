@@ -6,6 +6,8 @@ const chunk_depth = 16;
 
 window.chunkMap = chunkMap;
 
+window.textureAtlas = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated'})
+
 function generateChunks() {
     chunkMap.clear();
     let blocks = window.generate_graphNodeBlocks();
@@ -29,9 +31,13 @@ function reloadChunks() {
 }
 
 function renderChunks() {
+    textureAtlas.bind();
+
     chunkMap.forEach(chunk => {
         chunk.render();
     });
+
+    textureAtlas.unbind();
 }
 
 function clearChunks() {

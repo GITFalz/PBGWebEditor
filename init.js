@@ -36,28 +36,47 @@ function createShader(gl, type, source) {
 const vsSource = `#version 300 es
 
     in vec3 aPosition;
-    in vec3 aColor;
+    in vec2 aTexCoord;
+    in ivec3 aData;
 
     uniform mat4 uProjectionMatrix;
     uniform mat4 uViewMatrix;
     uniform mat4 uModelMatrix;
 
-    out vec3 vColor;
+    out vec2 vTexCoord;
+    flat out ivec3 vData;
 
     void main() {
         gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
-        vColor = aColor;
+        vTexCoord = aTexCoord;
+        vData = aData;
     }
 `;
 
 const fsSource = `#version 300 es
     precision mediump float;
 
-    in vec3 vColor;
+    in vec2 vTexCoord;
+    flat in ivec3 vData;
+    uniform sampler2D uTexture;
+
     out vec4 outColor;
 
     void main() {
-        outColor = vec4(vColor, 1.0);
+        int textureIndex = vData.x;
+        int atlasWidth = vData.y;
+        int atlasHeight = vData.z;
+        vec2 texCoord = vTexCoord;
+
+        float tileWidth = 1.0 / float(atlasWidth);
+        float tileHeight = 1.0 / float(atlasHeight);
+        texCoord.x = texCoord.x * tileWidth + float(textureIndex % atlasWidth) * tileWidth;
+        texCoord.y = texCoord.y * tileHeight + float(textureIndex / atlasWidth) * tileHeight;
+        vec4 color = texture(uTexture, texCoord);
+        if (color.a < 0.1) {
+            discard; // Discard transparent pixels
+        }
+        outColor = color;
     }
 `;
 
@@ -65,7 +84,9 @@ const structureShader = createProgram(gl, vsSource, fsSource);
 gl.useProgram(structureShader);
 
 const positionLocation = gl.getAttribLocation(structureShader, "aPosition");
-const colorLocation = gl.getAttribLocation(structureShader, "aColor");
+const texCoordLocation = gl.getAttribLocation(structureShader, "aTexCoord");
+const dataLocation = gl.getAttribLocation(structureShader, "aData");
+
 const structure_uProjectionMatrix = gl.getUniformLocation(structureShader, "uProjectionMatrix");
 const structure_uViewMatrix = gl.getUniformLocation(structureShader, "uViewMatrix");
 const structure_uModelMatrix = gl.getUniformLocation(structureShader, "uModelMatrix");
@@ -124,7 +145,9 @@ window.canvasHeight = canvas.height;
 window.program = structureShader;
 
 window.positionLocation = positionLocation;
-window.colorLocation = colorLocation;
+window.texCoordLocation = texCoordLocation;
+window.dataLocation = dataLocation;
+
 window.structure_uProjectionMatrix = structure_uProjectionMatrix;
 window.structure_uViewMatrix = structure_uViewMatrix;
 window.structure_uModelMatrix = structure_uModelMatrix;

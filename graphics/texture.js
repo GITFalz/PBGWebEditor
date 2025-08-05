@@ -43,7 +43,6 @@ class Texture {
         this.pixelData[index + 1] = g;
         this.pixelData[index + 2] = b;
         this.pixelData[index + 3] = a;
-        this.updateTexture();
     }
 
     bind() {

@@ -146,11 +146,8 @@ resizeCanvasToDisplaySize(canvas);
 
 window.addEventListener('resize', () => {
     resizeCanvasToDisplaySize(canvas);
+    requestAnimationFrame(render);
 });
-
-// Enable depth
-gl.enable(gl.DEPTH_TEST);
-gl.depthFunc(gl.LEQUAL);
 
 function resize() {
     window.structureCamera.resize();
@@ -194,6 +191,14 @@ let currentUpdate = () => {};
 let currentRenderer = () => {};
 
 setRenderType('structure'); // Default render type
+
+// Enable depth
+gl.enable(gl.DEPTH_TEST);
+gl.depthFunc(gl.LEQUAL);
+
+// Enable backface culling
+gl.enable(gl.CULL_FACE);
+gl.cullFace(gl.FRONT);
 
 // Animation loop
 function render() {

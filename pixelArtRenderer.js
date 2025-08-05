@@ -1,23 +1,3 @@
-let textures = [
-
-];
-
-window.textures = textures;
-
-
-
-let textureWidth = 16;
-let textureHeight = 16;
-
-let textureHalfWidth = textureWidth / 2;
-let textureHalfHeight = textureHeight / 2;
-
-let texture = null;
-
-let textureName = 'Untitled';
-let textureColor = [255, 255, 255, 255]; // Default color for pixel art
-
-
 let pencilTool = document.getElementById('pencil-tool');
 let eraserTool = document.getElementById('eraser-tool');
 let fillTool = document.getElementById('fill-tool');
@@ -109,6 +89,31 @@ createTool.addEventListener('click', () => {
     textureName = 'Untitled'; // Reset texture name
 });
 
+
+
+let textures = [
+
+];
+
+window.textures = textures;
+
+
+
+let textureWidth = 16;
+let textureHeight = 16;
+
+let textureHalfWidth = textureWidth / 2;
+let textureHalfHeight = textureHeight / 2;
+
+let texture = null;
+
+let updateTexture = false;
+
+let textureName = 'Untitled';
+let textureColor = [255, 255, 255, 255]; // Default color for pixel art
+colorPicker.value = '#ffffff'; // Default color picker value
+
+
 // just a 1x1 square for pixel art
 let positions = [
     -textureHalfWidth, -textureHalfHeight, -1.0,
@@ -181,8 +186,6 @@ function createNewTexture(width, height, pixelData = null) {
     textureHalfHeight = textureHeight / 2;
     texture = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated', pixelData: pixelData});
 
-    imagePosition = { x: 0, y: 0, z: 0 };
-    imageSize = 1.0;
     updateModelMatrix();
 
     positions = [
@@ -206,6 +209,9 @@ function saveCurrentTexture(name, confirmMessage = "Texture already exists. Do y
             return;
         }
     }
+
+    window.textureAtlas.delete(); // Delete the old texture atlas if it exists
+    window.textureAtlas = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated', pixelData: texture.pixelData.slice()});
 
     textures[name] = {
         name: name,
@@ -279,6 +285,7 @@ function pixelArtUpdate() {
             let pixelX = Math.floor(x * textureWidth);
             let pixelY = Math.floor(y * textureHeight);
             texture.setPixel(pixelX, pixelY, textureColor[0], textureColor[1], textureColor[2], textureColor[3]);
+            updateTexture = true;
         }
 
         canvas.style.cursor = 'pointer';
@@ -295,7 +302,13 @@ function pixelArtUpdate() {
 
     if (isScrolling) {
         imageSize -= window.scrollDelta * 0.01 * deltaTime * imageSize; // Adjust the scaling factor as needed
+        imageSize = Math.max(0.1, Math.min(imageSize, 100)); // Clamp size between 0.1 and 10
         updateModelMatrix();
+    }
+
+    if (updateTexture) {
+        texture.updateTexture();
+        updateTexture = false;
     }
 }
 window.pixelArtUpdate = pixelArtUpdate;
@@ -304,6 +317,8 @@ function pixelArtRender() {
     if (!texture) {
         return;
     }
+
+    gl.cullFace(gl.BACK);
 
     gl.uniformMatrix4fv(pa_uProjectionMatrix, false, textureCamera.projectionMatrix);
     gl.uniformMatrix4fv(pa_uModelMatrix, false, modelMatrix);
@@ -315,5 +330,7 @@ function pixelArtRender() {
 
     texture.unbind();
     vao.unbind();
+
+    gl.cullFace(gl.FRONT);
 }
 window.pixelArtRender = pixelArtRender;

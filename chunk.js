@@ -34,15 +34,15 @@ class Chunk {
             const { x, y, z } = block;
 
             for (let i = 0; i < 6; i++) {
-            const offset = window.blockSideOffsets[i];
-            const nx = x + offset[0];
-            const ny = y + offset[1];
-            const nz = z + offset[2];
+                const offset = window.blockSideOffsets[i];
+                const nx = x + offset[0];
+                const ny = y + offset[1];
+                const nz = z + offset[2];
 
-            if (blockSet.has(`${nx},${ny},${nz}`)) {
-                block.occlusion |= (1 << i);
-                faceCount--;
-            }
+                if (blockSet.has(`${nx},${ny},${nz}`)) {
+                    block.occlusion |= (1 << i);
+                    faceCount--;
+                }
             }
         });
         return faceCount;
@@ -50,7 +50,8 @@ class Chunk {
 
     generateMesh(faceCount) {
         const positions = new Float32Array(faceCount * 4 * 3);
-        const colors = new Float32Array(faceCount * 4 * 3);
+        const uvs = new Float32Array(faceCount * 4 * 2);
+        const texture = new Int32Array(faceCount * 4 * 3);
         const indices = new Uint16Array(faceCount * 6);
 
         let j = 0;
@@ -88,12 +89,14 @@ class Chunk {
             const g = baseColor[1] * brightness;
             const b = baseColor[2] * brightness;
 
-            colors.set([
-            r, g, b,
-            r, g, b,
-            r, g, b,
-            r, g, b
-            ], baseIndex * 3);
+            // Define uv coordinates for the block face
+            const faceUVs = window.blockFaceUVs[i]();
+            uvs.set(faceUVs, baseIndex * 2);
+
+            // Define texture data for the block face
+            for (let k = 0; k < 4; k++) {
+                texture.set([0, 1, 1], (baseIndex + k) * 3);
+            }
 
             // Define indices for the block face
             indices.set([
@@ -106,7 +109,9 @@ class Chunk {
         });
 
         let vertexBuffer = new VertexBuffer(positions, Float32Array, 3);
-        let colorBuffer = new VertexBuffer(colors, Float32Array, 3);
+        let uvBuffer = new VertexBuffer(uvs, Float32Array, 2);
+        let textureBuffer = new VertexBuffer(texture, Int32Array, 3);
+        
         let indexBuffer = new IndexBuffer(indices);
 
         if (this.vao) {
@@ -120,16 +125,21 @@ class Chunk {
         window.gl.enableVertexAttribArray(window.positionLocation);
         window.gl.vertexAttribPointer(window.positionLocation, 3, window.gl.FLOAT, false, 0, 0);
 
-        window.gl.bindBuffer(window.gl.ARRAY_BUFFER, colorBuffer.buffer);
-        window.gl.enableVertexAttribArray(window.colorLocation);
-        window.gl.vertexAttribPointer(window.colorLocation, 3, window.gl.FLOAT, false, 0, 0);
+        window.gl.bindBuffer(window.gl.ARRAY_BUFFER, uvBuffer.buffer);
+        window.gl.enableVertexAttribArray(window.texCoordLocation);
+        window.gl.vertexAttribPointer(window.texCoordLocation, 2, window.gl.FLOAT, false, 0, 0);
+
+        window.gl.bindBuffer(window.gl.ARRAY_BUFFER, textureBuffer.buffer);
+        window.gl.enableVertexAttribArray(window.dataLocation);
+        window.gl.vertexAttribIPointer(window.dataLocation, 3, window.gl.INT, false, 0, 0);
 
         window.gl.bindBuffer(window.gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
 
         this.vao.unbind();
 
         this.setPositionBuffer(vertexBuffer);
-        this.setColorBuffer(colorBuffer);
+        this.setUvBuffer(uvBuffer);
+        this.setTextureBuffer(textureBuffer);
         this.setIndexBuffer(indexBuffer);
     }
 
@@ -140,11 +150,18 @@ class Chunk {
         this.positionBuffer = buffer;
     }
 
-    setColorBuffer(buffer) {
-        if (this.colorBuffer) {
-            this.colorBuffer.delete();
+    setUvBuffer(buffer) {
+        if (this.uvBuffer) {
+            this.uvBuffer.delete();
         }
-        this.colorBuffer = buffer;
+        this.uvBuffer = buffer;
+    }
+
+    setTextureBuffer(buffer) {
+        if (this.textureBuffer) {
+            this.textureBuffer.delete();
+        }
+        this.textureBuffer = buffer;
     }
 
     setIndexBuffer(buffer) {
@@ -160,13 +177,21 @@ class Chunk {
             this.positionBuffer.delete();
             this.positionBuffer = null;
         }
-        if (this.colorBuffer) {
-            this.colorBuffer.delete();
-            this.colorBuffer = null;
+        if (this.uvBuffer) {
+            this.uvBuffer.delete();
+            this.uvBuffer = null;
+        }
+        if (this.textureBuffer) {
+            this.textureBuffer.delete();
+            this.textureBuffer = null;
         }
         if (this.indexBuffer) {
             this.indexBuffer.delete();
             this.indexBuffer = null;
+        }
+        if (this.vao) {
+            this.vao.delete();
+            this.vao = null;
         }
         this.blocks = [];
     }
