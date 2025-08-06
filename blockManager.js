@@ -1,3 +1,10 @@
+window.blocks = {};
+
+const blockNameInput = document.getElementById('block-name-input'); 
+const saveBlockButton = document.getElementById('save-block-button');
+const blockList = document.getElementById('block-list');
+
+
 let blockViewCamera = new Camera();
 let blockEditCamera = new Camera();
 
@@ -186,6 +193,52 @@ canvas.addEventListener('drop', (e) => {
     window.heldTexture = null;
 });
 
+
+
+saveBlockButton.addEventListener('click', () => {
+    const blockName = blockNameInput.value.trim();
+    if (!blockName) {
+        alert('Please enter a block name.');
+        return;
+    }
+
+    const blockData = {
+        name: blockName,
+        textureName: window.heldTexture,
+        textureIndices: Array.from(blockTextures),
+    }
+
+    // <div class="block-item p-sm mb-sm default-selected">Block 1</div>
+    if (window.blocks[blockName]) {
+        confirm(`Block "${blockName}" already exists. Do you want to overwrite it?`) || (blockNameInput.value = '');
+        return;
+    } else {
+        const blockItem = document.createElement('div');
+        blockItem.className = 'block-item p-sm mb-sm default-selected';
+        blockItem.textContent = blockName;
+        blockItem.dataset.name = blockName;
+        blockItem.addEventListener('click', () => {
+            // Load the block data into the editor
+            blockNameInput.value = blockItem.dataset.name;
+            const block = window.blocks[blockItem.dataset.name];
+            if (block) {
+                blockTextures.set(block.textureIndices);
+                blockEditTextures.set(block.textureIndices);
+                blockTextureDataBuffer.updateData(blockTextures);
+                blockEditTextureDataBuffer.updateData(blockEditTextures);
+                window.heldTexture = block.textureName;
+                blockAwake(); // Refresh the texture list
+            }
+        });
+        blockList.appendChild(blockItem);
+    }
+
+    window.blocks[blockName] = blockData;
+});
+
+
+
+
 function setBlockTextureIndex(side, index) {
     if (side < 0 || side >= 6) {
         console.error('Invalid side index:', side);
@@ -240,6 +293,9 @@ function blockAwake() {
                 e.target.classList.add('selected');
                 window.heldIndex = e.target.dataset.index;
                 window.heldTexture = entry.name;
+            });
+            textureItem.addEventListener('dragend', (e) => {
+                e.target.classList.remove('selected');
             });
             textureList.appendChild(textureItem);
         });

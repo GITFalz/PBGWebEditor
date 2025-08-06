@@ -478,6 +478,19 @@ select.input-field:focus {
   margin-top: 15px;
 }
 
+.button-half-width {
+  width: 50%; /* Make it half width */
+  margin-top: 15px;
+}
+
+.margin-left-10 {
+  margin-left: 10px;
+}
+
+.margin-right-10 {
+  margin-right: 10px;
+}
+
 .button-square {
   width: 30px;
   height: 30px;

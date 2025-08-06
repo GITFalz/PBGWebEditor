@@ -1,5 +1,6 @@
 let structureLeftPanel = document.getElementById('structure-left-panel');
 let pixelArtLeftPanel = document.getElementById('texture-left-panel');
+let blockManagerLeftPanel = document.getElementById('block-manager-left-panel');
 
 let structureRightPanel = document.getElementById('structure-right-panel');
 let pixelArtRightPanel = document.getElementById('pixel-art-right-panel');
@@ -9,6 +10,7 @@ let textureActionPanel = document.getElementById('texture-action-panel');
 
 pixelArtLeftPanel.classList.add('hidden');
 structureLeftPanel.classList.remove('hidden');
+blockManagerLeftPanel.classList.add('hidden');
 
 pixelArtRightPanel.classList.add('hidden');
 structureRightPanel.classList.remove('hidden');
@@ -26,6 +28,7 @@ structureButton.addEventListener('click', () => {
 
     structureLeftPanel.classList.remove('hidden');
     pixelArtLeftPanel.classList.add('hidden');
+    blockManagerLeftPanel.classList.add('hidden');
 
     structureButton.classList.add('selected');
     pixelArtButton.classList.remove('selected');
@@ -40,6 +43,7 @@ pixelArtButton.addEventListener('click', () => {
 
     structureLeftPanel.classList.add('hidden');
     pixelArtLeftPanel.classList.remove('hidden');
+    blockManagerLeftPanel.classList.add('hidden');
 
     structureButton.classList.remove('selected');
     pixelArtButton.classList.add('selected');
@@ -54,6 +58,7 @@ blockButton.addEventListener('click', () => {
 
     structureLeftPanel.classList.add('hidden');
     pixelArtLeftPanel.classList.add('hidden');
+    blockManagerLeftPanel.classList.remove('hidden');
 
     structureButton.classList.remove('selected');
     pixelArtButton.classList.remove('selected');

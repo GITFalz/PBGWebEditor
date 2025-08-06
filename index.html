@@ -78,6 +78,20 @@
                             <button id="add-texture-button" class="button-full-width mt-md">Add Texture</button>
                         </div>
                     </div>
+                    <div id="block-manager-left-panel" class="hidden">
+                        <div class="panel-section">
+                            <h2>Block Manager</h2>
+                            <div class="block-manager-content">
+                                <div id="texture-list" class="block-list">
+                                    <div class="block-item-texture selected" draggable="true" data-texture="grass">Grass</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="stone">Stone</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="dirt">Dirt</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="sand">Sand</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="water">Water</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="center-panel">
                     <!-- WebGL structure canvas -->
@@ -570,14 +584,20 @@
                     </div>
                     <div id="block-manager-right-panel">
                         <div class="panel-section">
-                            <h2>Block Manager</h2>
-                            <div class="block-manager-content">
-                                <div id="texture-list" class="block-list">
-                                    <div class="block-item-texture selected" draggable="true" data-texture="grass">Grass</div>
-                                    <div class="block-item-texture" draggable="true" data-texture="stone">Stone</div>
-                                    <div class="block-item-texture" draggable="true" data-texture="dirt">Dirt</div>
-                                    <div class="block-item-texture" draggable="true" data-texture="sand">Sand</div>
-                                    <div class="block-item-texture" draggable="true" data-texture="water">Water</div>
+                            <h2>Block Editor</h2>
+                            <div class="block-editor-content flex-col">
+                                <input 
+                                type="text" 
+                                id="block-name-input" 
+                                class="input-field mb-md" 
+                                placeholder="Enter block name" 
+                                />
+
+                                <div class="flex-row mb-md gap-2">
+                                    <button id="save-block-button" class="button-full-width">Save</button>
+                                </div>
+                                <label for="block-texture-select">Block List:</label>
+                                <div id="block-list" class="block-list flex-col" style="max-height: 300px; overflow-y: auto; border: 1px solid #444; border-radius: 4px; padding: 5px;">
                                 </div>
                             </div>
                         </div>
