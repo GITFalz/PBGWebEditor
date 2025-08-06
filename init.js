@@ -37,14 +37,14 @@ const vsSource = `#version 300 es
 
     in vec3 aPosition;
     in vec2 aTexCoord;
-    in ivec3 aData;
+    in int aData;
 
     uniform mat4 uProjectionMatrix;
     uniform mat4 uViewMatrix;
     uniform mat4 uModelMatrix;
 
     out vec2 vTexCoord;
-    flat out ivec3 vData;
+    flat out int vData;
 
     void main() {
         gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
@@ -57,25 +57,39 @@ const fsSource = `#version 300 es
     precision mediump float;
 
     in vec2 vTexCoord;
-    flat in ivec3 vData;
+    flat in int vData;
     uniform sampler2D uTexture;
+
+    uniform int uAtlasWidth;
+    uniform int uAtlasHeight;
 
     out vec4 outColor;
 
     void main() {
-        int textureIndex = vData.x;
-        int atlasWidth = vData.y;
-        int atlasHeight = vData.z;
+        int textureIndex = vData;
+        int atlasWidth = uAtlasWidth;
+        int atlasHeight = uAtlasHeight;
         vec2 texCoord = vTexCoord;
 
-        float tileWidth = 1.0 / float(atlasWidth);
-        float tileHeight = 1.0 / float(atlasHeight);
-        texCoord.x = texCoord.x * tileWidth + float(textureIndex % atlasWidth) * tileWidth;
-        texCoord.y = texCoord.y * tileHeight + float(textureIndex / atlasWidth) * tileHeight;
-        vec4 color = texture(uTexture, texCoord);
+        vec4 color = vec4(1.0); // Default color
+
+        if (textureIndex >= 0) {
+            float tileWidth = 1.0 / float(atlasWidth);
+            float tileHeight = 1.0 / float(atlasHeight);
+
+            int row = textureIndex / atlasWidth;
+            int invertedRow = (atlasHeight - 1) - row;
+
+            texCoord.x = texCoord.x * tileWidth + float(textureIndex % atlasWidth) * tileWidth;
+            texCoord.y = texCoord.y * tileHeight + float(invertedRow) * tileHeight;
+
+            color = texture(uTexture, texCoord);
+        }
+
         if (color.a < 0.1) {
             discard; // Discard transparent pixels
         }
+
         outColor = color;
     }
 `;
@@ -90,6 +104,8 @@ const dataLocation = gl.getAttribLocation(structureShader, "aData");
 const structure_uProjectionMatrix = gl.getUniformLocation(structureShader, "uProjectionMatrix");
 const structure_uViewMatrix = gl.getUniformLocation(structureShader, "uViewMatrix");
 const structure_uModelMatrix = gl.getUniformLocation(structureShader, "uModelMatrix");
+const structure_uAtlasWidth = gl.getUniformLocation(structureShader, "uAtlasWidth");
+const structure_uAtlasHeight = gl.getUniformLocation(structureShader, "uAtlasHeight");
 
 
 
@@ -147,6 +163,8 @@ window.program = structureShader;
 window.positionLocation = positionLocation;
 window.texCoordLocation = texCoordLocation;
 window.dataLocation = dataLocation;
+window.structure_uAtlasWidth = structure_uAtlasWidth;
+window.structure_uAtlasHeight = structure_uAtlasHeight;
 
 window.structure_uProjectionMatrix = structure_uProjectionMatrix;
 window.structure_uViewMatrix = structure_uViewMatrix;

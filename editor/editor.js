@@ -475,33 +475,39 @@ display_currentNodeProperties();
 setSelectedPointNode(currentGraphNode.children[0]);
 
 document.addEventListener('click', (e) => {
-  const button = e.target.closest('button');
-  if (button && button.classList.contains('value-add')) {
-    const input = document.getElementById(button.dataset.input);
-    if (input) {
-      input.stepUp();
+    if (!e.target.closest('.structure-right-panel'))
+        return;
+
+    const button = e.target.closest('button');
+    if (button && button.classList.contains('value-add')) {
+        const input = document.getElementById(button.dataset.input);
+        if (input) {
+        input.stepUp();
+        }
+
+        let target = button.closest('.input-group').dataset.target;
+        let params = button.closest('.input-group').dataset.params;
+        currentPointNode[target][params] = parseFloat(input.value);
+
+        reloadMesh();
+    } else if (button && button.classList.contains('value-subtract')) {
+        const input = document.getElementById(button.dataset.input);
+        if (input) {
+        input.stepDown();
+        }
+
+        let target = button.closest('.input-group').dataset.target;
+        let params = button.closest('.input-group').dataset.params;
+        currentPointNode[target][params] = parseFloat(input.value);
+
+        reloadMesh();
     }
-
-    let target = button.closest('.input-group').dataset.target;
-    let params = button.closest('.input-group').dataset.params;
-    currentPointNode[target][params] = parseFloat(input.value);
-
-    reloadMesh();
-  } else if (button && button.classList.contains('value-subtract')) {
-    const input = document.getElementById(button.dataset.input);
-    if (input) {
-      input.stepDown();
-    }
-
-    let target = button.closest('.input-group').dataset.target;
-    let params = button.closest('.input-group').dataset.params;
-    currentPointNode[target][params] = parseFloat(input.value);
-
-    reloadMesh();
-  }
 });
 
 document.addEventListener('input', (e) => {
+    if (!e.target.closest('.structure-right-panel'))
+        return;
+
     let input = e.target;
     if (input.parentElement.classList.contains('input-group')) {
         if (input.id === 'shape-type-select') {
@@ -536,6 +542,9 @@ document.addEventListener('input', (e) => {
 });
 
 document.addEventListener('change', (e) => {
+    if (!e.target.closest('.structure-right-panel'))
+        return;
+    
     if (e.target.id === 'shape-type-select') {
         currentPointNode.setType(e.target.value);
         set_currentGraphNodeType(e.target.value);

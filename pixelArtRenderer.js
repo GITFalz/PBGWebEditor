@@ -89,13 +89,7 @@ createTool.addEventListener('click', () => {
     textureName = 'Untitled'; // Reset texture name
 });
 
-
-
-let textures = [
-
-];
-
-window.textures = textures;
+window.textures = {};
 
 
 
@@ -115,7 +109,7 @@ colorPicker.value = '#ffffff'; // Default color picker value
 
 
 // just a 1x1 square for pixel art
-let positions = [
+let pixelArtPositions = [
     -textureHalfWidth, -textureHalfHeight, -1.0,
      textureHalfWidth, -textureHalfHeight, -1.0,
      textureHalfWidth,  textureHalfHeight, -1.0,
@@ -132,7 +126,7 @@ let indices = [0, 1, 2, 0, 2, 3];
 let imagePosition = { x: 0, y: 0, z: 0 };
 
 let vao = new VertexArrayObject();
-let vertexBuffer = new VertexBuffer(positions, Float32Array, 3);
+let vertexBuffer = new VertexBuffer(pixelArtPositions, Float32Array, 3);
 let uvBuffer = new VertexBuffer(uvs, Float32Array, 2);
 let indexBuffer = new IndexBuffer(indices);
 
@@ -155,6 +149,74 @@ let modelMatrix = identity();
 let imageSize = 1.0;
 
 let tool = 'none';
+
+
+
+const textureEntries = document.getElementById("texture-entries");
+const addTextureBtn = document.getElementById("add-texture-button");
+const atlasRowsInput = document.getElementById("atlas-rows");   
+const atlasColumnsInput = document.getElementById("atlas-columns");
+
+function createTextureEntry(name = "", index = 0) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "texture-entry flex-row justify-between items-center mb-sm";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Texture Name";
+    nameInput.className = "input-field w-full";
+    nameInput.value = name;
+
+    const indexInput = document.createElement("input");
+    indexInput.type = "number";
+    indexInput.min = 0;
+    indexInput.placeholder = "Index";
+    indexInput.value = index;
+    indexInput.className = "input-field ml-sm";
+    indexInput.style.width = "70px";
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "delete-node-button";
+    deleteBtn.title = "Remove";
+    deleteBtn.addEventListener("click", () => wrapper.remove());
+
+    wrapper.appendChild(nameInput);
+    wrapper.appendChild(indexInput);
+    wrapper.appendChild(deleteBtn);
+
+    textureEntries.appendChild(wrapper);
+}
+
+addTextureBtn.addEventListener("click", () => {
+    createTextureEntry();
+});
+
+function getTextureEntries() {
+    const entries = [];
+    const textureEntryElements = textureEntries.querySelectorAll(".texture-entry");
+
+    textureEntryElements.forEach(entry => {
+        const nameInput = entry.querySelector("input[type='text']");
+        const indexInput = entry.querySelector("input[type='number']");
+        entries.push({
+            name: nameInput.value.trim(),
+            index: parseInt(indexInput.value, 10)
+        });
+    });
+
+    return entries;
+}
+
+function clearTextureEntries() {
+    textureEntries.innerHTML = ''; // Clear all entries
+}
+
+function setTextureEntries(entries) {
+    clearTextureEntries();
+    entries.forEach(entry => {
+        createTextureEntry(entry.name, entry.index);
+    });
+}
 
 
 
@@ -187,14 +249,17 @@ function createNewTexture(width, height, pixelData = null) {
     texture = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated', pixelData: pixelData});
 
     updateModelMatrix();
+    clearTextureEntries();
+    atlasRowsInput.value = 1;
+    atlasColumnsInput.value = 1;
 
-    positions = [
+    pixelArtPositions = [
         -textureHalfWidth, -textureHalfHeight, -1.0,
          textureHalfWidth, -textureHalfHeight, -1.0,
          textureHalfWidth,  textureHalfHeight, -1.0,
         -textureHalfWidth,  textureHalfHeight, -1.0
     ];
-    vertexBuffer.updateData(positions);
+    vertexBuffer.updateData(pixelArtPositions);
 }
 
 createNewTexture(16, 16);
@@ -204,68 +269,63 @@ function saveCurrentTexture(name, confirmMessage = "Texture already exists. Do y
         return;
     }
 
-    if (textures[name]) {
+    if (window.textures[name]) {
         if (!confirm(confirmMessage)) {
             return;
         }
     }
 
+    window.currentTexture = name;
     window.textureAtlas.delete(); // Delete the old texture atlas if it exists
     window.textureAtlas = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated', pixelData: texture.pixelData.slice()});
 
-    textures[name] = {
+    const textureEntries = getTextureEntries();
+    const atlasRows = parseInt(atlasRowsInput.value, 10) || 1;
+    const atlasColumns = parseInt(atlasColumnsInput.value, 10) || 1;
+
+    window.textures[name] = {
         name: name,
         width: textureWidth,
         height: textureHeight,
-        pixelData: texture.pixelData.slice() // Create a copy of the pixel data
+        pixelData: texture.pixelData.slice(),
+        entries: textureEntries,
+        atlasRows: atlasRows,
+        atlasColumns: atlasColumns
     };
 
     console.log(`Texture "${name}" saved successfully!`);
 }
 
 function loadTexture(name) {
-    if (!textures[name]) {
+    if (!window.textures[name]) {
         alert(`Texture "${name}" does not exist!`);
         return;
     }
 
-    const data = textures[name];
+    const data = window.textures[name];
+
+    if (
+        typeof data.pixelData === 'object' &&
+        data.pixelData !== null &&
+        !Array.isArray(data.pixelData)
+    ) {
+        const arr = Object.keys(data.pixelData)
+            .map(key => Number(key))
+            .sort((a, b) => a - b) // ensure correct order
+            .map(i => data.pixelData[i]);
+
+        const uint8array = new Uint8Array(arr);
+        data.pixelData = uint8array;
+    }
+
     createNewTexture(data.width, data.height, data.pixelData);
+    setTextureEntries(data.entries);
+    atlasRowsInput.value = data.atlasRows || 1;
+    atlasColumnsInput.value = data.atlasColumns || 1;
+
     textureName = data.name;
     pixelArtNameInput.value = textureName;
     console.log(`Texture "${textureName}" loaded successfully!`);
-}
-
-function getMouseNDC(mouseX, mouseY, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (2 * (mouseX - rect.left)) / rect.width - 1;
-    const y = 1 - (2 * (mouseY - rect.top)) / rect.height;
-    return [x, y];
-}
-
-function unprojectOrtho(ndcX, ndcY, orthoMatrix) {
-    const invOrtho = invert(orthoMatrix);
-    const world = multiply(invOrtho, [ndcX, ndcY, 0, 1]);
-    return [world[0] / world[3], world[1] / world[3]];
-}
-
-function worldToModel(worldPos, modelMatrix) {
-    const invModel = invert(modelMatrix);
-    const model = multiply(invModel, [...worldPos, 1]);
-    return [model[0] / model[3], model[1] / model[3], model[2] / model[3]];
-}
-
-function isHovering(mouseX, mouseY, canvas, modelMatrix) {
-    const [ndcX, ndcY] = getMouseNDC(mouseX, mouseY, canvas);
-    const [wx, wy] = unprojectOrtho(ndcX, ndcY, multiply(textureCamera.projectionMatrix, textureCamera.viewMatrix));
-    const modelPos = worldToModel([wx, wy, 0], modelMatrix);
-
-    // Check if inside [-textureHalfWidth, textureHalfWidth] in X and Y in model space
-    return { 
-        hovering: modelPos[0] >= -textureHalfWidth && modelPos[0] <= textureHalfWidth && modelPos[1] >= -textureHalfHeight && modelPos[1] <= textureHalfHeight,
-        x: (modelPos[0] + textureHalfWidth) / (2 * textureHalfWidth),
-        y: (modelPos[1] + textureHalfHeight) / (2 * textureHalfHeight)
-    };
 }
 
 function updateModelMatrix() {
@@ -279,7 +339,7 @@ function pixelArtUpdate() {
         return;
     }
 
-    const { hovering, x, y } = isHovering(mouseX, mouseY, canvas, modelMatrix);
+    const { hovering, x, y } = isHovering(mouseX, mouseY, canvas.getBoundingClientRect(), modelMatrix, textureHalfWidth, textureHalfHeight, textureCamera.projectionMatrix, textureCamera.viewMatrix);
     if (hovering) {
         if (isDragging && tool === 'pencil') {
             let pixelX = Math.floor(x * textureWidth);

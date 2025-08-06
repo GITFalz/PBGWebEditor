@@ -29,12 +29,12 @@ class Camera {
         }
     }
 
-    setProjectionMode(mode) {
+    setProjectionMode(mode, width = canvas.width, height = canvas.height) {
         this.projectionMode = mode;
         if (mode === 'perspective') {
-            this.projectionMatrix = perspective(45 * Math.PI / 180, canvas.width / canvas.height, 0.1, 1000);
+            this.projectionMatrix = perspective(45 * Math.PI / 180, width / height, 0.1, 1000);
         } else if (mode === 'orthographic') {
-            this.projectionMatrix = orthographic(-canvas.width / 2, canvas.width / 2, -canvas.height / 2, canvas.height / 2, 0.1, 1000);
+            this.projectionMatrix = orthographic(-width / 2, width / 2, -height / 2, height / 2, 0.1, 1000);
         }
     }
 

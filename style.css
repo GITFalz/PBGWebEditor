@@ -637,3 +637,42 @@ select.input-field:focus {
   border-radius: 6px;
   font-size: 14px;
 }
+
+.block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+}
+
+.block-item-texture {
+  background-color: #1e1e1e;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  color: #e0e0e0;
+  border-left: 4px solid transparent;
+}
+
+.block-item-texture:hover {
+  background-color: #2a2a2a;
+}
+
+.block-item-texture.selected {
+  background-color: #2a2a2a;
+  border-left: 4px solid #007bff;
+  font-weight: bold;
+}
+
+#texture-entries .texture-entry input {
+  margin-right: 6px;
+}
+
+.input-field-label {
+  display: flex;
+  flex-direction: column;
+  color: #ccc;
+  font-size: 14px;
+}

@@ -6,7 +6,7 @@ const chunk_depth = 16;
 
 window.chunkMap = chunkMap;
 
-window.textureAtlas = new Texture({type: 'blank', width: textureWidth, height: textureHeight, format: 'pixelated'})
+window.textureAtlas = new Texture({type: 'blank', width: 16, height: 16, format: 'pixelated'})
 
 function generateChunks() {
     chunkMap.clear();

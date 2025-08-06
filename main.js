@@ -152,6 +152,7 @@ window.addEventListener('resize', () => {
 function resize() {
     window.structureCamera.resize();
     window.textureCamera.resize();
+    blockResize();
 }
 
 function update() {
@@ -181,6 +182,10 @@ function setRenderType(type) {
         currentUpdate = window.pixelArtUpdate;
         currentRenderer = window.pixelArtRender;
         gl.useProgram(window.pixelArtShader);
+    } else if (type === 'block') {
+        currentUpdate = window.blockUpdate;
+        currentRenderer = window.blockRender;
+        blockAwake();
     } else {
         console.error('Unknown render type:', type);
     }

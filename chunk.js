@@ -51,7 +51,7 @@ class Chunk {
     generateMesh(faceCount) {
         const positions = new Float32Array(faceCount * 4 * 3);
         const uvs = new Float32Array(faceCount * 4 * 2);
-        const texture = new Int32Array(faceCount * 4 * 3);
+        const texture = new Int32Array(faceCount * 4);
         const indices = new Uint16Array(faceCount * 6);
 
         let j = 0;
@@ -95,7 +95,7 @@ class Chunk {
 
             // Define texture data for the block face
             for (let k = 0; k < 4; k++) {
-                texture.set([0, 1, 1], (baseIndex + k) * 3);
+                texture[baseIndex + k] = -1;
             }
 
             // Define indices for the block face
@@ -110,7 +110,7 @@ class Chunk {
 
         let vertexBuffer = new VertexBuffer(positions, Float32Array, 3);
         let uvBuffer = new VertexBuffer(uvs, Float32Array, 2);
-        let textureBuffer = new VertexBuffer(texture, Int32Array, 3);
+        let textureBuffer = new VertexBuffer(texture, Int32Array, 1);
         
         let indexBuffer = new IndexBuffer(indices);
 
@@ -131,7 +131,7 @@ class Chunk {
 
         window.gl.bindBuffer(window.gl.ARRAY_BUFFER, textureBuffer.buffer);
         window.gl.enableVertexAttribArray(window.dataLocation);
-        window.gl.vertexAttribIPointer(window.dataLocation, 3, window.gl.INT, false, 0, 0);
+        window.gl.vertexAttribIPointer(window.dataLocation, 1, window.gl.INT, false, 0, 0);
 
         window.gl.bindBuffer(window.gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
 

@@ -51,7 +51,32 @@
                         </div>
                     </div>
                     <div id="texture-left-panel" class="hidden">
-                        
+                        <div class="panel-section">
+                            <h2>Texture Atlas Settings</h2>
+                            
+                            <!-- Atlas dimensions -->
+                            <div class="input-group">
+                                <label class="input-field-label w-full">
+                                Rows
+                                <input type="number" min="1" class="input-field" id="atlas-rows" value="4" />
+                                </label>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-field-label w-full">
+                                Columns
+                                <input type="number" min="1" class="input-field" id="atlas-columns" value="4" />
+                                </label>
+                            </div>
+
+                            <!-- Texture entries -->
+                            <h3 class="mt-md">Texture Entries</h3>
+                            <div id="texture-entries" class="flex-col gap-md">
+                            </div>
+
+                            <!-- Add new texture button -->
+                            <button id="add-texture-button" class="button-full-width mt-md">Add Texture</button>
+                        </div>
                     </div>
                 </div>
                 <div id="center-panel">
@@ -543,6 +568,20 @@
                             </div>
                         </div>
                     </div>
+                    <div id="block-manager-right-panel">
+                        <div class="panel-section">
+                            <h2>Block Manager</h2>
+                            <div class="block-manager-content">
+                                <div id="texture-list" class="block-list">
+                                    <div class="block-item-texture selected" draggable="true" data-texture="grass">Grass</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="stone">Stone</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="dirt">Dirt</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="sand">Sand</div>
+                                    <div class="block-item-texture" draggable="true" data-texture="water">Water</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -572,6 +611,7 @@
 		<script src="./editor/values.js"></script>
         <script src="./structureRenderer.js"></script>
         <script src="./pixelArtRenderer.js"></script>
+        <script src="./blockManager.js"></script>
         <script src="./editor/nav.js"></script>
 
         <!-- Chunk management scripts -->
