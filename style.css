@@ -421,7 +421,7 @@ select.input-field:focus {
 
 .input-group input[type="number"] {
   flex-grow: 1; /* Allow input to take available space */
-  width: auto; /* Override default 100% width */
+  width: 80%;
   margin-bottom: 0; /* Remove bottom margin from input within group */
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
